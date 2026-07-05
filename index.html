@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>DOTS WAR</title>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Russo+One&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;font-family:'Russo One',sans-serif;font-weight:400}
@@ -246,7 +247,7 @@ body{background:#0a0818;color:#fff;min-height:100dvh}
   flex-direction:column;
   justify-content:flex-start;
   align-items:center;
-  padding:6px 6px 40px;
+  padding:6px 6px 58px;
   gap:0;
   background:#e8e4d8
 }
@@ -395,13 +396,13 @@ body{background:#0a0818;color:#fff;min-height:100dvh}
 }
 /* Game screen mobile */
 @media(max-width:600px){
-  #screen-game{padding:5px 5px 38px}
+  #screen-game{padding:5px 5px 56px}
   .hud{padding:3px 7px;margin-bottom:4px}
   .btn-sm{padding:5px 9px;font-size:.62rem}
   .gfoot{margin-top:3px;gap:4px}
 }
 @media(max-height:620px) and (orientation:landscape){
-  #screen-game{padding:4px 6px 36px}
+  #screen-game{padding:4px 6px 54px}
   .hud{padding:3px 8px;margin-bottom:3px}
   .gfoot{margin-top:3px;gap:4px}
   .btn-sm{padding:4px 8px}
@@ -788,7 +789,7 @@ var CC={
 var G=null, gameMode='pve', selLv=2, olFSz=1;
 var aiTimer=null, aiLock=false;
 var playerNames=['Red Dots','Green Pix'];
-var peer=null, peerConn=null, myPNum=1, isHost=false, olReady=false;
+var db=null, roomRef=null, movesRef=null, myPNum=1, isHost=false, olReady=false;
 
 // ═══════════════════════
 //  GAME LOGIC
@@ -1064,7 +1065,7 @@ function initCanvas(g){
   var scrW = scr.clientWidth||window.innerWidth;
   var hudH = (hud ?hud.offsetHeight :46)+5;
   var fooH = (foot?foot.offsetHeight:34)+4;
-  var padV = 46; // top+bottom padding of #screen-game (6+40)
+  var padV = 64; // top+bottom padding of #screen-game (6+58)
   var availH = scrH - hudH - fooH - padV;
   var availW = scrW - 12;
   CS = Math.max(7, Math.floor(
@@ -1216,7 +1217,7 @@ function SS(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
 }
-function goMenu(){destroyPeer();SS('screen-menu');}
+function goMenu(){leaveRoom();SS('screen-menu');}
 function goLevelSel(){SS('screen-level');}
 function initMode(mode){
   gameMode=mode;
@@ -1333,7 +1334,7 @@ function onCvClick(e){
   if(!canPl(G,rc[0],rc[1])) return;
   var before=G.sc.slice();
   doMove(G,rc[0],rc[1]);
-  if(gameMode==='online') sendP({type:'move',r:rc[0],c:rc[1]});
+  if(gameMode==='online') pushMove(rc[0],rc[1]);
   draw(G);updateHUD();
   // Play sound if territory captured
   var justMoved=3-G.cur;
@@ -1371,38 +1372,42 @@ function closeRules(){document.getElementById('rulesModal').classList.remove('op
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2800);}
 
 // ═══════════════════════
-//  ONLINE — PeerJS
+//  ONLINE — Firebase Realtime Database
+//  Turn-based moves sync through Google's servers:
+//  no P2P, no NAT/TURN problems — works on any network.
 // ═══════════════════════
-function genCode(){return String(Math.floor(100000+Math.random()*900000));}
-// ICE servers: STUN + live TURN credentials (fetched from Cloudflare at runtime).
-// TURN relays traffic when direct P2P is impossible (mobile networks, strict NAT).
-var _ice=null;
-function getIce(cb){
-  if(_ice){cb(_ice);return;}
-  var base=[
-    {urls:'stun:stun.l.google.com:19302'},
-    {urls:'stun:stun.cloudflare.com:3478'},
-    {urls:'turn:freestun.net:3478',username:'free',credential:'free'}
-  ];
-  var done=false;
-  var to=setTimeout(function(){if(!done){done=true;_ice=base;cb(base);}},3500);
+var FB_CFG={
+  apiKey:"AIzaSyCxGB68ogFcdRk5Aeav_6rZmCNmIHY8_K0",
+  authDomain:"dots-2d4e4.firebaseapp.com",
+  databaseURL:"https://dots-2d4e4-default-rtdb.firebaseio.com",
+  projectId:"dots-2d4e4",
+  storageBucket:"dots-2d4e4.firebasestorage.app",
+  messagingSenderId:"911143426593",
+  appId:"1:911143426593:web:a89862c9acb24aff8f6160"
+};
+function getDB(){
+  if(db) return db;
   try{
-    fetch('https://speed.cloudflare.com/turn-creds')
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(done)return;done=true;clearTimeout(to);
-        if(d&&d.username&&d.credential){
-          base.push({urls:'turn:turn.speed.cloudflare.com:50000?transport=udp',username:d.username,credential:d.credential});
-          base.push({urls:'turn:turn.speed.cloudflare.com:50000?transport=tcp',username:d.username,credential:d.credential});
-        }
-        _ice=base;cb(base);
-      })
-      .catch(function(){if(!done){done=true;clearTimeout(to);_ice=base;cb(base);}});
-  }catch(e){if(!done){done=true;clearTimeout(to);_ice=base;cb(base);}}
+    if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+    db=firebase.database();
+  }catch(e){db=null;}
+  return db;
 }
-function PC(ice){return{config:{iceServers:ice,iceCandidatePoolSize:12},debug:0};}
+function genCode(){return String(Math.floor(100000+Math.random()*900000));}
 function setOS(msg,cls){var el=document.getElementById('olSt');el.textContent=msg;el.className='ol-st'+(cls?' '+cls:'');}
-function destroyPeer(){olReady=false;if(peerConn){try{peerConn.close();}catch(e){}peerConn=null;}if(peer){try{peer.destroy();}catch(e){}peer=null;}}
+function leaveRoom(){
+  olReady=false;
+  if(movesRef){try{movesRef.off();}catch(e){}movesRef=null;}
+  if(roomRef){
+    try{roomRef.off();roomRef.child('guest').off();}catch(e){}
+    try{
+      if(isHost) roomRef.remove();                 // host leaving kills the room
+      else if(roomRef) roomRef.child('guest').remove(); // guest leaving frees the seat
+    }catch(e){}
+    try{roomRef.onDisconnect().cancel();roomRef.child('guest').onDisconnect().cancel();}catch(e){}
+    roomRef=null;
+  }
+}
 function switchTab(t){
   document.getElementById('tabC').className='otab'+(t==='c'?' on':'');
   document.getElementById('tabJ').className='otab'+(t==='j'?' on':'');
@@ -1419,26 +1424,66 @@ function buildOlLvs(){
     g.appendChild(el);
   }
 }
-function cancelOnline(){destroyPeer();SS('screen-name');}
+function cancelOnline(){leaveRoom();SS('screen-name');}
+function listenMoves(){
+  if(!roomRef) return;
+  movesRef=roomRef.child('moves');
+  movesRef.on('child_added',function(snap){
+    var d=snap.val();
+    if(!d||d.p===myPNum) return;          // own moves are applied locally
+    if(!G||G.over) return;
+    if(!canPl(G,d.r,d.c)) return;         // ignore duplicates/replays
+    var ob=G.sc.slice();
+    doMove(G,d.r,d.c);draw(G);updateHUD();
+    var og=G.sc[2-myPNum]-ob[2-myPNum];
+    if(og>0) playCaptureSound(og);
+    checkEarly(G);
+    if(G.over) setTimeout(showResult,600);
+  });
+}
+function pushMove(r,c){
+  if(movesRef){try{movesRef.push({p:myPNum,r:r,c:c});}catch(e){}}
+}
 var _ca=0;
-function createRoom(){destroyPeer();_ca=0;_dc();}
+function createRoom(){
+  leaveRoom();_ca=0;
+  if(!getDB()){setOS(T('netErr'),'err');return;}
+  _dc();
+}
 function _dc(){
   var code=genCode();setOS(T('creating'),'');
   document.getElementById('btnCreate').style.display='none';
   document.getElementById('codeBox').style.display='none';
-  getIce(function(ice){
-  peer=new Peer('dwv1-'+code,PC(ice));
-  var ot=setTimeout(function(){if(!peer||peer.disconnected){setOS(T('netErr'),'err');document.getElementById('btnCreate').style.display='block';}},15000);
-  peer.on('open',function(){
+  var ref=db.ref('rooms/dw'+code);
+  var ot=setTimeout(function(){setOS(T('netErr'),'err');document.getElementById('btnCreate').style.display='block';},15000);
+  ref.transaction(function(cur){
+    if(cur!==null) return;                // code already taken -> abort
+    return{fsz:olFSz,hostName:playerNames[0],created:firebase.database.ServerValue.TIMESTAMP};
+  },function(err,committed){
     clearTimeout(ot);
+    if(err||!committed){
+      _ca++;
+      if(_ca<6){_dc();}
+      else{setOS(T('netErr'),'err');document.getElementById('btnCreate').style.display='block';}
+      return;
+    }
+    roomRef=ref;isHost=true;myPNum=1;
+    ref.onDisconnect().remove();          // auto-cleanup if host drops
     document.getElementById('codeVal').textContent=code;
     document.getElementById('codeBox').style.display='block';
-    isHost=true;myPNum=1;
     setOS(T('waiting'),'wdots');
-    peer.on('connection',function(conn){if(peerConn)try{peerConn.close();}catch(e){}peerConn=conn;setupConn();});
-  });
-  peer.on('disconnected',function(){setTimeout(function(){if(peer)try{peer.reconnect();}catch(e){}},1200);});
-  peer.on('error',function(err){clearTimeout(ot);if(err.type==='unavailable-id'){_ca++;if(_ca<6)_dc();else{setOS(T('netErr'),'err');document.getElementById('btnCreate').style.display='block';}}else{setOS(T('netErr'),'err');document.getElementById('btnCreate').style.display='block';}});
+    ref.child('guest').on('value',function(snap){
+      var gst=snap.val();
+      if(gst&&gst.name&&!olReady){
+        playerNames[1]=gst.name;
+        olReady=true;
+        setOS(T('started'),'ok');
+        listenMoves();
+        startGame();
+      } else if(!gst&&olReady&&G&&!G.over){
+        showToast(T('oppLeft'));setTimeout(goMenu,2200);
+      }
+    });
   });
 }
 function copyCode(){
@@ -1446,54 +1491,42 @@ function copyCode(){
   if(navigator.clipboard)navigator.clipboard.writeText(c).then(function(){showToast(T('codeCopied')+c);}).catch(function(){showToast(T('codeCopied')+c);});
   else showToast(T('codeCopied')+c);
 }
-var _ja=0;
-function joinRoom(){_ja=0;_doJoin();}
-function _doJoin(){
+function joinRoom(){
   var code=document.getElementById('joinIn').value.trim().replace(/[^0-9]/g,'');
   if(code.length<6){setOS(T('enterCodeLbl'),'err');return;}
-  destroyPeer();isHost=false;myPNum=2;setOS(T('connecting'),'');
-  getIce(function(ice){
-  peer=new Peer(PC(ice));
-  var ct=setTimeout(function(){
-    if(!peerConn||!peerConn.open){
-      if(_ja<2){_ja++;_doJoin();}          // auto-retry up to 2 times
-      else{setOS(T('notFound'),'err');destroyPeer();}
-    }
-  },12000);
-  peer.on('open',function(){peerConn=peer.connect('dwv1-'+code,{reliable:true,serialization:'json'});setupConn(ct);});
-  peer.on('disconnected',function(){try{peer.reconnect();}catch(e){}});
-  peer.on('error',function(err){
-    clearTimeout(ct);
-    if(err.type==='peer-unavailable'){setOS(T('notFound'),'err');destroyPeer();}
-    else if(_ja<2){_ja++;setTimeout(_doJoin,800);}
-    else{setOS(T('netErr'),'err');destroyPeer();}
-  });
-  });
+  leaveRoom();
+  if(!getDB()){setOS(T('netErr'),'err');return;}
+  isHost=false;myPNum=2;setOS(T('connecting'),'');
+  var ref=db.ref('rooms/dw'+code);
+  var myName=playerNames[0];
+  var done=false;
+  var ct=setTimeout(function(){if(!done){done=true;setOS(T('netErr'),'err');}},12000);
+  ref.once('value').then(function(snap){
+    if(done)return;
+    var room=snap.val();
+    if(!room||!room.hostName){done=true;clearTimeout(ct);setOS(T('notFound'),'err');return;}
+    ref.child('guest').transaction(function(cur){
+      if(cur!==null) return;              // seat taken
+      return{name:myName,joined:firebase.database.ServerValue.TIMESTAMP};
+    },function(err,committed){
+      if(done)return;done=true;clearTimeout(ct);
+      if(err){setOS(T('netErr'),'err');return;}
+      if(!committed){setOS(T('notFound'),'err');return;}
+      roomRef=ref;
+      ref.child('guest').onDisconnect().remove();  // free the seat if guest drops
+      olFSz=room.fsz||1;
+      playerNames[1]=myName;
+      playerNames[0]=room.hostName;
+      olReady=true;
+      setOS(T('started'),'ok');
+      listenMoves();
+      startGame();
+      ref.on('value',function(s){          // room deleted -> host left
+        if(!s.exists()&&olReady&&G&&!G.over){showToast(T('oppLeft'));setTimeout(goMenu,2200);}
+      });
+    });
+  }).catch(function(){if(!done){done=true;clearTimeout(ct);setOS(T('netErr'),'err');}});
 }
-function setupConn(ct){
-  if(!peerConn)return;
-  var pi=null;
-  peerConn.on('open',function(){
-    if(ct)clearTimeout(ct);
-    pi=setInterval(function(){if(peerConn&&peerConn.open)sendP({type:'ping'});},5000);
-    if(isHost){
-      sendP({type:'start',fsz:olFSz,p1:playerNames[0]});
-      setOS(T('connected'),'ok');olReady=true;startGame();
-    } else {
-      sendP({type:'hello',name:playerNames[0]});setOS(T('connected'),'ok');
-    }
-  });
-  peerConn.on('data',function(d){
-    if(!d||!d.type)return;
-    if(d.type==='ping'){sendP({type:'pong'});return;}if(d.type==='pong')return;
-    if(d.type==='start'){olFSz=d.fsz;var mn=playerNames[0];playerNames[0]=d.p1||'P1';playerNames[1]=mn;olReady=true;setOS(T('started'),'ok');startGame();}
-    else if(d.type==='hello'){playerNames[1]=d.name||'P2';if(G)updateHUD();}
-    else if(d.type==='move'){if(!G||G.over)return;var ob=G.sc.slice();doMove(G,d.r,d.c);draw(G);updateHUD();var og=G.sc[2-myPNum]-ob[2-myPNum];if(og>0)playCaptureSound(og);checkEarly(G);if(G.over)setTimeout(showResult,600);}
-  });
-  peerConn.on('close',function(){if(pi)clearInterval(pi);if(G&&!G.over){showToast(T('oppLeft'));setTimeout(goMenu,2200);}});
-  peerConn.on('error',function(){if(pi)clearInterval(pi);if(G&&!G.over)setTimeout(goMenu,2200);});
-}
-function sendP(d){try{if(peerConn&&peerConn.open)peerConn.send(d);}catch(e){}}
 
 // ═══════════════════════
 //  EVENTS
