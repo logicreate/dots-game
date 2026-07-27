@@ -441,11 +441,6 @@ body{background:#0a0818;color:#fff;min-height:100dvh}
           <h3 id="mPveT">PLAY</h3>
           <p id="mPveS">Battle the AI army</p>
         </button>
-        <button class="mcard pvp" onclick="initMode('pvp')">
-          <img class="char-img wide" data-img="duo" alt="">
-          <h3 id="mPvpT">BATTLE 1x1</h3>
-          <p id="mPvpS">Local duel</p>
-        </button>
         <button class="mcard onl" onclick="initMode('online')">
           <img class="char-img" data-img="onl" alt="">
           <h3 id="mOnT">ONLINE BATTLE</h3>
@@ -456,45 +451,16 @@ body{background:#0a0818;color:#fff;min-height:100dvh}
     </div>
   </div>
 </div>
-<div id="screen-level" class="screen iscr">
-  <div class="stitle" id="lvTitle">Choose Your Opponent</div>
-  <div class="ssub" id="lvSub">Select the AI difficulty level</div>
-  <div class="lv-cards">
-    <div class="lv-card" id="lvCard1" onclick="selLevel(1)">
-      <div class="lv-ico"><img data-img="pvp" alt=""></div>
-      <div class="lv-name" id="lv1n">Rookie</div>
-    </div>
-    <div class="lv-card sel" id="lvCard2" onclick="selLevel(2)">
-      <div class="lv-ico"><img data-img="onl" alt=""></div>
-      <div class="lv-name" id="lv2n">Warrior</div>
-    </div>
-    <div class="lv-card" id="lvCard3" onclick="selLevel(3)">
-      <div class="lv-ico"><img data-img="pve" alt=""></div>
-      <div class="lv-name" id="lv3n">Legend</div>
-    </div>
-  </div>
-  <div class="row">
-    <button class="btn btn-red" onclick="startGame()" id="btnStart">⚔️ Start Battle!</button>
-    <button class="btn btn-ghost" onclick="SS('screen-menu')" id="btnBackLv">← Back</button>
-  </div>
-</div>
-
 <!-- NAMES -->
 <div id="screen-name" class="screen iscr">
   <div class="stitle" id="nameTitle">Name Your Warriors</div>
   <div class="ssub" id="nameSub">Enter player names</div>
   <div class="inp-block">
     <div class="inp-row">
-      <div class="inp-lbl"><div class="dot-l" style="background:#c81000"></div><span id="lbl1">Red Dots — Player 1</span></div>
+      <div class="inp-lbl"><div class="dot-l" style="background:#f0a800"></div><span id="lbl1">Your Name</span></div>
       <input class="inp" id="ni1" type="text" maxlength="18"
         oninput="this.classList.remove('bad');document.getElementById('ne1').classList.remove('show')">
       <div class="inp-err" id="ne1">⚠ Enter a name to continue</div>
-    </div>
-    <div class="inp-row" id="nameRow2">
-      <div class="inp-lbl"><div class="dot-l" style="background:#0a7a20"></div><span id="lbl2">Green Pix — Player 2</span></div>
-      <input class="inp" id="ni2" type="text" maxlength="18"
-        oninput="this.classList.remove('bad');document.getElementById('ne2').classList.remove('show')">
-      <div class="inp-err" id="ne2">⚠ Enter Player 2 name</div>
     </div>
   </div>
   <div class="row">
@@ -584,7 +550,7 @@ body{background:#0a0818;color:#fff;min-height:100dvh}
   </div>
   <div class="res-detail" id="resD"></div>
   <div class="res-btns">
-    <button class="btn btn-gold" id="btnNext" onclick="goLevelSel()" style="display:none;width:100%">Play Again →</button>
+    <button class="btn btn-gold" id="btnNext" style="display:none;width:100%">Play Again →</button>
     <button class="btn btn-sm" style="width:100%;padding:10px" onclick="restartGame()" id="rPlayAgain">🔄 Play Again</button>
     <button class="btn btn-ghost" style="width:100%" onclick="goMenu()" id="rMenu">🏠 Main Menu</button>
   </div>
@@ -662,8 +628,8 @@ var TR = {
     lv2n:'Warrior',
     lv3n:'Legend',
     btnStart:'⚔️ Start Battle!', btnBack:'← Back',
-    nameTitle:'Name Your Warriors', nameSub:'Enter player names',
-    lbl1:'Red Dots — Player 1', lbl2:'Green Pix — Player 2',
+    nameTitle:'Name Your Warriors', nameSub:'Enter your name',
+    lbl1:'Your Name', lbl2:'Green Pix — Player 2',
     ne1:'⚠ Enter a name to continue', ne2:'⚠ Enter Player 2 name',
     btnCont:'▶ Continue',
     olTitle:'🌐 Online Battle', olSub:'Play with a friend over the internet',
@@ -684,6 +650,7 @@ var TR = {
     gMenu:'🏠 Menu', gRestart:'🔄 Restart', gRules:'📜 Rules',
     rPlayAgain:'🔄 Play Again', rMenu:'🏠 Main Menu',
     earlyWin:'Early Victory',
+    btnNextLevel:'Next Level →', btnRestartCampaign:'🔄 New Campaign', campaignWin:'🏆 Campaign Complete!',
     rulesH:'📜 DOTS WAR — How to Play', rGoal:'🎯 Goal',
     rGoalT:'Surround enemy dots to capture territory. Most captures wins!',
     rHow:'⚡ Gameplay',
@@ -713,8 +680,8 @@ var TR = {
     lv2n:'Воин',
     lv3n:'Легенда',
     btnStart:'⚔️ В бой!', btnBack:'← Назад',
-    nameTitle:'Имена воинов', nameSub:'Введите имена игроков',
-    lbl1:'Красные — Игрок 1', lbl2:'Зелёные — Игрок 2',
+    nameTitle:'Имена воинов', nameSub:'Введите своё имя',
+    lbl1:'Ваше имя', lbl2:'Зелёные — Игрок 2',
     ne1:'⚠ Введите имя, чтобы продолжить', ne2:'⚠ Введите имя второго игрока',
     btnCont:'▶ Продолжить',
     olTitle:'🌐 Онлайн Битва', olSub:'Играйте с другом через интернет',
@@ -735,6 +702,7 @@ var TR = {
     gMenu:'🏠 Меню', gRestart:'🔄 Заново', gRules:'📜 Правила',
     rPlayAgain:'🔄 Сыграть снова', rMenu:'🏠 Главное меню',
     earlyWin:'Досрочная победа',
+    btnNextLevel:'Следующий уровень →', btnRestartCampaign:'🔄 Новая кампания', campaignWin:'🏆 Кампания пройдена!',
     rulesH:'📜 DOTS WAR — Правила', rGoal:'🎯 Цель',
     rGoalT:'Окружите точки врага своими. Больше захватов — победа!',
     rHow:'⚡ Геймплей',
@@ -774,9 +742,7 @@ function applyLang(){
     if(el){ var v=T(id); if(v!==id) el.textContent=v; }
   });
   document.getElementById('btnRst').textContent = T('gRestart');
-  document.getElementById('btnStart').textContent = T('btnStart');
   document.getElementById('btnCont').textContent = T('btnCont');
-  document.getElementById('btnBackLv').textContent = T('btnBack');
   document.getElementById('btnBackNm').textContent = T('btnBack');
   document.getElementById('btnBackOl').textContent = T('btnBackOl');
   document.getElementById('btnCreate').textContent = T('btnCreateLbl');
@@ -804,10 +770,19 @@ var CC={
   gridBorder:'rgba(60,90,160,0.75)'
 };
 
-var G=null, gameMode='pve', selLv=2, olFSz=1;
+var G=null, gameMode='pve', selLv=1, olFSz=1;
 var aiTimer=null, aiLock=false;
 var playerNames=['Red Dots','Green Pix'];
 var db=null, roomRef=null, movesRef=null, myPNum=1, isHost=false, olReady=false;
+
+// PvE campaign progress: 1=Rookie(small board), 2=Warrior(medium), 3=Legend(large)
+var pveLevel=1;
+function loadPveProgress(){try{var v=parseInt(localStorage.getItem('dwPveLv'),10);if(v>=1&&v<=3)pveLevel=v;}catch(e){}}
+function savePveProgress(){try{localStorage.setItem('dwPveLv',String(pveLevel));}catch(e){}}
+loadPveProgress();
+
+// Capture-flash animation state
+var activeAnims=[], animRAF=null;
 
 // ═══════════════════════
 //  GAME LOGIC
@@ -823,6 +798,24 @@ function vMoves(g){
   for(var r=0;r<n;r++) for(var c=0;c<n;c++) if(b[r][c]===EMPTY) mv.push([r,c]);
   return mv;
 }
+// Empty cells within a small radius of any existing dot — used to keep the
+// deep minimax search fast on large boards by not wasting time on distant,
+// irrelevant corners of the board. Falls back to every empty cell when the
+// board is still (nearly) untouched.
+function candidateMoves(g){
+  var b=g.board,n=g.n,near=[];
+  for(var r=0;r<n;r++) for(var c=0;c<n;c++){
+    if(b[r][c]!==EMPTY) continue;
+    var isNear=false;
+    for(var dr=-2;dr<=2&&!isNear;dr++) for(var dc=-2;dc<=2&&!isNear;dc++){
+      if(!dr&&!dc) continue;
+      var nr=r+dr,nc=c+dc;
+      if(nr>=0&&nr<n&&nc>=0&&nc<n&&b[nr][nc]!==EMPTY) isNear=true;
+    }
+    if(isNear) near.push([r,c]);
+  }
+  return near.length>=6?near:vMoves(g);
+}
 function isWall(b,r,c,p){var v=b[r][c];return p===1?(v===P1||v===T1):(v===P2||v===T2);}
 function flood(g,player){
   var n=g.n,b=g.board;
@@ -836,20 +829,36 @@ function flood(g,player){
   return reach;
 }
 function findCaps(g,player){
-  var opp=3-player,reach=flood(g,player),dots=[],empty=[];
+  // Finds everything a new wall by `player` has just enclosed:
+  //  - dots:   live enemy dots inside the loop -> captured
+  //  - empty:  empty cells inside the loop -> become player's territory
+  //  - flipT:  cells that were the OPPONENT's territory -> recaptured
+  //  - revive: player's OWN dots the opponent had captured earlier, now
+  //            sitting inside the reclaimed territory -> freed back to life
+  var opp=3-player,reach=flood(g,player);
   var b=g.board,n=g.n;
+  var dots=[],empty=[],flipT=[],revive=[];
+  var oppT=opp===1?T1:T2;
+  var oppCapMark=opp===1?C1:C2; // marks MY dots that the opponent captured earlier
   for(var r=0;r<n;r++) for(var c=0;c<n;c++)
     if(!reach[r][c]&&!isWall(b,r,c,player)){
       var v=b[r][c];
-      if(v===opp) dots.push([r,c]); else if(v===EMPTY) empty.push([r,c]);
+      if(v===opp) dots.push([r,c]);
+      else if(v===EMPTY) empty.push([r,c]);
+      else if(v===oppT) flipT.push([r,c]);
+      else if(v===oppCapMark) revive.push([r,c]);
     }
-  return{dots:dots,empty:empty};
+  return{dots:dots,empty:empty,flipT:flipT,revive:revive};
 }
 function applyCaps(g,player,caps){
-  var cv=player===1?C1:C2,tv=player===1?T1:T2;
+  var cv=player===1?C1:C2,tv=player===1?T1:T2,opp=3-player;
   for(var i=0;i<caps.dots.length;i++) g.board[caps.dots[i][0]][caps.dots[i][1]]=cv;
   for(var i=0;i<caps.empty.length;i++) g.board[caps.empty[i][0]][caps.empty[i][1]]=tv;
+  for(var i=0;i<caps.flipT.length;i++) g.board[caps.flipT[i][0]][caps.flipT[i][1]]=tv;
+  for(var i=0;i<caps.revive.length;i++) g.board[caps.revive[i][0]][caps.revive[i][1]]=player;
   g.sc[player-1]+=caps.dots.length;
+  if(caps.revive.length) g.sc[opp-1]=Math.max(0,g.sc[opp-1]-caps.revive.length);
+  g._lastCap={dots:caps.dots,empty:caps.empty,flipT:caps.flipT,revive:caps.revive,player:player};
 }
 function doMove(g,r,c){
   if(!canPl(g,r,c)) return false;
@@ -866,13 +875,19 @@ function cloneG(g){
 }
 function checkEarly(g){
   if(g.over) return;
-  var s1=g.sc[0],s2=g.sc[1],b=g.board,n=g.n,p1l=0,p2l=0;
+  // If the trailing player cannot catch up even in the best possible case
+  // (capturing every remaining empty cell AND every one of the opponent's
+  // live dots), the result is already decided -> end the battle now.
+  var s1=g.sc[0],s2=g.sc[1],b=g.board,n=g.n,l1=0,l2=0,e=0;
   for(var r=0;r<n;r++) for(var c=0;c<n;c++){
-    if(b[r][c]===P1) p1l++;
-    if(b[r][c]===P2) p2l++;
+    var v=b[r][c];
+    if(v===P1) l1++;
+    else if(v===P2) l2++;
+    else if(v===EMPTY) e++;
   }
-  if(s1>s2+p1l&&s1-s2>3){g.over=true;g.earlyW=1;}
-  else if(s2>s1+p2l&&s2-s1>3){g.over=true;g.earlyW=2;}
+  var max1=s1+e+l2, max2=s2+e+l1;
+  if(s1>s2&&max2<=s1){g.over=true;g.earlyW=1;}
+  else if(s2>s1&&max1<=s2){g.over=true;g.earlyW=2;}
 }
 
 // ═══════════════════════
@@ -881,9 +896,13 @@ function checkEarly(g){
 
 // How many dots captured if p places at (r,c)
 function simCap(g,r,c,p){
+  // Heuristic "value" of playing at (r,c): capturing enemy dots is worth
+  // most; freeing an imprisoned dot of your own is worth even more (it's
+  // a double swing — you gain a live dot AND deny the opponent a point);
+  // reclaiming enemy territory is a smaller bonus.
   var o=g.board[r][c]; g.board[r][c]=p;
-  var n=findCaps(g,p).dots.length; g.board[r][c]=o;
-  return n;
+  var caps=findCaps(g,p); g.board[r][c]=o;
+  return caps.dots.length + caps.revive.length*1.3 + caps.flipT.length*0.35;
 }
 
 // Proximity score: sum of inverse-distance weights to nearby dots
@@ -930,9 +949,15 @@ function evalG(g,p){
 // Alpha-beta minimax
 function minimax(g,depth,alpha,beta,maxP,rP){
   if(depth===0||g.over) return evalG(g,rP);
-  var moves=vMoves(g).map(function(m){
-    return{r:m[0],c:m[1],s:simCap(g,m[0],m[1],g.cur)*32+prox(g,m[0],m[1],g.cur)*0.45};
-  }).sort(function(a,b){return b.s-a.s;}).slice(0,12);
+  // Cheap local pre-filter (no flood-fills) narrows the field first...
+  var pre=candidateMoves(g).map(function(m){
+    return{r:m[0],c:m[1],p:prox(g,m[0],m[1],g.cur)};
+  }).sort(function(a,b){return b.p-a.p;}).slice(0,16);
+  // ...then only the expensive flood-fill capture check runs on the
+  // shortlist, before the final ranking and branch cap.
+  var moves=pre.map(function(m){
+    return{r:m.r,c:m.c,s:simCap(g,m.r,m.c,g.cur)*32+m.p*0.45};
+  }).sort(function(a,b){return b.s-a.s;}).slice(0,9);
   if(maxP){
     var best=-Infinity;
     for(var i=0;i<moves.length;i++){
@@ -979,16 +1004,19 @@ function bestMove(g){
   // Predicts opponent replies with 2-ply minimax, hunts captures,
   // blocks opponent captures and cuts off their paths
   if(lv===2){
-    var cands=moves.map(function(m){
-      var myCap=simCap(g,m[0],m[1],p)*55;    // capture as many enemy dots as possible
-      var oppCap=simCap(g,m[0],m[1],opp)*46; // deny opponent's captures
-      var chain=prox(g,m[0],m[1],p)*1.0;     // build own chains
-      var cut=prox(g,m[0],m[1],opp)*0.6;     // stand in the opponent's paths
-      return{r:m[0],c:m[1],s:myCap+oppCap+chain+cut+Math.random()*1.2};
+    var cands=candidateMoves(g).map(function(m){
+      var myCap=simCap(g,m[0],m[1],p)*58;    // capture as many enemy dots as possible
+      var oppCap=simCap(g,m[0],m[1],opp)*52; // predict & block the opponent's captures
+      var chain=prox(g,m[0],m[1],p)*1.05;    // build own chains
+      var cut=prox(g,m[0],m[1],opp)*0.7;     // stand in the opponent's paths
+      var def=defense(g,m[0],m[1],p)*0.7;    // keep own dots safe from being surrounded
+      return{r:m[0],c:m[1],s:myCap+oppCap+chain+cut+def+Math.random()*1.0};
     });
     cands.sort(function(a,b){return b.s-a.s;});
-    // Look ahead: my move → opponent's best reply → my best answer
-    var top=cands.slice(0,10),bestSc=-Infinity,bestMv=null;
+    // Look ahead: my move → opponent's best reply → my best answer.
+    // This is what lets the Warrior "read" the opponent: it keeps the
+    // move that still scores best after the opponent responds optimally.
+    var top=cands.slice(0,12),bestSc=-Infinity,bestMv=null;
     for(var i=0;i<top.length;i++){
       var ng=cloneG(g);doMove(ng,top[i].r,top[i].c);
       var sc=minimax(ng,2,-Infinity,Infinity,false,p)+top[i].s*0.08;
@@ -1000,20 +1028,34 @@ function bestMove(g){
   // ── LEVEL 3: Legend ──────────────────────────────────
   // Full comprehensive heuristics + 3-ply minimax
   if(lv===3){
-    var cands=moves.map(function(m){
-      var myCap=simCap(g,m[0],m[1],p)*62;    // capture enemy = highest
-      var oppCap=simCap(g,m[0],m[1],opp)*52; // block opponent = very high
-      var chain=prox(g,m[0],m[1],p)*1.2;     // build good chains
-      var cut=prox(g,m[0],m[1],opp)*0.7;     // cut off opponent's paths
-      var def=defense(g,m[0],m[1],p)*1.0;    // protect own dots
+    // Instant-win check: if any single move already guarantees an
+    // unbeatable lead (same math as checkEarly), take it right away —
+    // no need to search deeper. Keeps the Legend fast AND decisive.
+    // Only worth the extra scan once the board is getting full (few
+    // candidates left) — early in the game an instant win is impossible
+    // anyway, so skip it there to keep the AI snappy.
+    if(moves.length<60){
+      for(var i=0;i<moves.length;i++){
+        var ng0=cloneG(g);doMove(ng0,moves[i][0],moves[i][1]);
+        checkEarly(ng0);
+        if(ng0.over&&ng0.earlyW===p) return moves[i];
+      }
+    }
+    var cands=candidateMoves(g).map(function(m){
+      var myCap=simCap(g,m[0],m[1],p)*64;    // capture enemy = highest
+      var oppCap=simCap(g,m[0],m[1],opp)*56; // predict & block opponent = very high
+      var chain=prox(g,m[0],m[1],p)*1.25;    // build good chains
+      var cut=prox(g,m[0],m[1],opp)*0.75;    // cut off opponent's paths
+      var def=defense(g,m[0],m[1],p)*1.1;    // protect own dots
       // Static territory value of this position
       var ng=cloneG(g);doMove(ng,m[0],m[1]);
       var terr=(evalG(ng,p)-evalG(g,p))*0.35;
       return{r:m[0],c:m[1],s:myCap+oppCap+chain+cut+def+terr+Math.random()*0.3};
     });
     cands.sort(function(a,b){return b.s-a.s;});
-    // Run minimax depth 3 on top 15 candidates
-    var top15=cands.slice(0,15);
+    // Run minimax depth 3 on the strongest candidates only — deep enough
+    // to be nearly unbeatable, narrow enough to stay fast.
+    var top15=cands.slice(0,10);
     var bestSc=-Infinity,bestMv=null;
     for(var i=0;i<top15.length;i++){
       var ng=cloneG(g);doMove(ng,top15[i].r,top15[i].c);
@@ -1068,6 +1110,27 @@ function playCaptureSound(count){
     gain2.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.4);
     osc2.start(ac.currentTime + 0.18);
     osc2.stop(ac.currentTime + 0.42);
+  }
+}
+
+// ═══════════════════════
+//  CAPTURE ANIMATION
+// ═══════════════════════
+function animCellsFromCap(cap){
+  if(!cap) return [];
+  return cap.dots.concat(cap.empty,cap.flipT,cap.revive);
+}
+function spawnCaptureAnim(cells,color){
+  if(!cells||!cells.length) return;
+  activeAnims.push({cells:cells.slice(),color:color,start:performance.now(),dur:700});
+  if(!animRAF){
+    var tick=function(){
+      var now=performance.now();
+      activeAnims=activeAnims.filter(function(a){return now-a.start<a.dur;});
+      if(G) draw(G);
+      animRAF=activeAnims.length?requestAnimationFrame(tick):null;
+    };
+    animRAF=requestAnimationFrame(tick);
   }
 }
 var canvas=null,ctx=null,CS=24,PAD=16,hR=-1,hC=-1,VW=0,VH=0;
@@ -1211,6 +1274,31 @@ function draw(g){
       ctx.moveTo(x+d2,y-d2);ctx.lineTo(x-d2,y+d2);ctx.stroke();
     }
   }
+  // ── Capture flash animation: expanding ring + soft flash over
+  //    every cell that was just captured / recaptured / revived ──
+  if(activeAnims.length){
+    var _now=performance.now();
+    ctx.save();
+    for(var _ai=0;_ai<activeAnims.length;_ai++){
+      var _an=activeAnims[_ai];
+      var _t=(_now-_an.start)/_an.dur; if(_t>1)_t=1;
+      var _ringA=Math.max(0,1-_t),_ringR=dr*(1+_t*2.1);
+      var _flashA=_t<0.4?(0.4-_t)/0.4*0.28:0;
+      for(var _ci=0;_ci<_an.cells.length;_ci++){
+        var _cxy=n2x(_an.cells[_ci][0],_an.cells[_ci][1]);
+        if(_flashA>0){
+          ctx.globalAlpha=_flashA;ctx.fillStyle=_an.color;
+          ctx.beginPath();ctx.arc(_cxy[0],_cxy[1],dr*1.5,0,Math.PI*2);ctx.fill();
+        }
+        if(_ringA>0){
+          ctx.globalAlpha=_ringA*0.9;ctx.strokeStyle=_an.color;
+          ctx.lineWidth=Math.max(1.4,CS*0.09);
+          ctx.beginPath();ctx.arc(_cxy[0],_cxy[1],_ringR,0,Math.PI*2);ctx.stroke();
+        }
+      }
+    }
+    ctx.restore();ctx.globalAlpha=1;
+  }
   // Last move: pencil ring
   if(last){
     var lxy=n2x(last[0],last[1]);
@@ -1236,50 +1324,36 @@ function SS(id){
   document.getElementById(id).classList.add('active');
 }
 function goMenu(){leaveRoom();SS('screen-menu');}
-function goLevelSel(){SS('screen-level');}
 function initMode(mode){
   gameMode=mode;
-  if(mode==='pve'){SS('screen-level');return;}
-  var pvp=mode==='pvp';
-  document.getElementById('nameRow2').style.display=pvp?'':'none';
-  document.getElementById('nameSub').textContent=pvp?T('lvSubPvp'):T('lvSubPve');
+  if(mode==='pve'){
+    selLv=pveLevel;
+    startGame();
+    return;
+  }
   SS('screen-name');
   setTimeout(function(){document.getElementById('ni1').focus();},80);
 }
-function selLevel(n){
-  selLv=n;
-  document.querySelectorAll('.lv-card').forEach(function(c){c.classList.remove('sel');});
-  document.getElementById('lvCard'+n).classList.add('sel');
-}
 function confirmNames(){
+  // Only the online mode reaches this screen now (PvE starts instantly,
+  // local 1x1 has been removed) — a single name is all we need.
   var n1=document.getElementById('ni1').value.trim();
-  var n2=document.getElementById('ni2').value.trim();
   document.getElementById('ni1').classList.remove('bad');document.getElementById('ne1').classList.remove('show');
-  document.getElementById('ni2').classList.remove('bad');document.getElementById('ne2').classList.remove('show');
-  var err=false;
-  if(!n1){document.getElementById('ni1').classList.add('bad');document.getElementById('ne1').classList.add('show');document.getElementById('ni1').focus();err=true;}
-  if(gameMode==='pvp'&&!n2){document.getElementById('ni2').classList.add('bad');document.getElementById('ne2').classList.add('show');if(!err)document.getElementById('ni2').focus();err=true;}
-  if(err) return;
-  playerNames[0]=n1; playerNames[1]=gameMode==='pvp'?n2:'AI';
-  if(gameMode==='online'){
-    buildOlLvs();SS('screen-online');setOS('','');
-    document.getElementById('codeBox').style.display='none';
-    document.getElementById('btnCreate').style.display='block';
-  } else {
-    startGame();
-  }
+  if(!n1){document.getElementById('ni1').classList.add('bad');document.getElementById('ne1').classList.add('show');document.getElementById('ni1').focus();return;}
+  playerNames[0]=n1;
+  buildOlLvs();SS('screen-online');setOS('','');
+  document.getElementById('codeBox').style.display='none';
+  document.getElementById('btnCreate').style.display='block';
 }
 function startGame(){
   if(gameMode==='online'&&!olReady) return;
   if(aiTimer){clearTimeout(aiTimer);aiTimer=null;}
-  aiLock=false;hR=-1;hC=-1;
+  aiLock=false;hR=-1;hC=-1;activeAnims=[];
   var n;
   if(gameMode==='pve'){
     n=selLv===1?11:selLv===2?16:21;
     playerNames[0]=lang==='ru'?'Красные':'Red Dots';
     playerNames[1]=lang==='ru'?'Зелёные':'Green Pix';
-  } else if(gameMode==='pvp'){
-    n=FIELD_SIZES[2];
   } else {
     n=FIELD_SIZES[olFSz];
   }
@@ -1304,8 +1378,7 @@ function updateHUD(){
   var sz=G.n-1;
   document.getElementById('lvBadge').textContent=
     gameMode==='pve'?('🤠 '+lvn[G.level-1]+' · '+sz+'×'+sz):
-    gameMode==='online'?('🌐 '+sz+'×'+sz):
-    ('⚔️ '+sz+'×'+sz);
+    ('🌐 '+sz+'×'+sz);
   document.getElementById('p1nm').textContent=playerNames[0];
   document.getElementById('p2nm').textContent=playerNames[1];
   if(G.over){
@@ -1326,7 +1399,7 @@ function schedAI(){
   if(!G||G.over||G.cur!==2||gameMode!=='pve') return;
   aiLock=true;
   document.getElementById('aiThink').classList.add('show');
-  var delay=G.level===3?460+Math.random()*250:160+Math.random()*150;
+  var delay=G.level===3?320+Math.random()*180:150+Math.random()*120;
   aiTimer=setTimeout(function(){
     document.getElementById('aiThink').classList.remove('show');
     if(!G||G.over){aiLock=false;return;}
@@ -1335,7 +1408,10 @@ function schedAI(){
       var bsc=G.sc.slice();
       doMove(G,mv[0],mv[1]);draw(G);updateHUD();
       var aiGained=G.sc[1]-bsc[1]; // AI is player 2
-      if(aiGained>0) playCaptureSound(aiGained);
+      if(aiGained>0){
+        playCaptureSound(aiGained);
+        spawnCaptureAnim(animCellsFromCap(G._lastCap),CC.p2);
+      }
     }
     aiLock=false;checkEarly(G);
     if(G.over) setTimeout(showResult,600);
@@ -1354,10 +1430,13 @@ function onCvClick(e){
   doMove(G,rc[0],rc[1]);
   if(gameMode==='online') pushMove(rc[0],rc[1]);
   draw(G);updateHUD();
-  // Play sound if territory captured
+  // Play sound + capture animation if territory was captured
   var justMoved=3-G.cur;
   var gained=G.sc[justMoved-1]-before[justMoved-1];
-  if(gained>0) playCaptureSound(gained);
+  if(gained>0){
+    playCaptureSound(gained);
+    spawnCaptureAnim(animCellsFromCap(G._lastCap),justMoved===1?CC.p1:CC.p2);
+  }
   checkEarly(G);
   if(G.over){setTimeout(showResult,600);return;}
   if(gameMode==='pve') schedAI();
@@ -1382,7 +1461,25 @@ function showResult(){
   document.getElementById('rw1').textContent=n1;document.getElementById('rw2').textContent=n2;
   if(w===0) document.getElementById('resD').textContent=T('drawD')+s1+T('andPts');
   else{var wn=w===1?n1:n2,ln=w===1?n2:n1,ws=w===1?s1:s2,ls=w===1?s2:s1;document.getElementById('resD').textContent=wn+T('winD')+ws+T('pts')+ln+' —'+T('only')+ls+'.';}
-  document.getElementById('btnNext').style.display='block';
+  var btnNext=document.getElementById('btnNext');
+  if(gameMode==='pve'&&w===1&&pveLevel<3){
+    // Won this stage of the campaign -> advance to the next AI level & board
+    pveLevel++;savePveProgress();
+    btnNext.style.display='block';
+    btnNext.textContent=T('btnNextLevel');
+    btnNext.onclick=function(){selLv=pveLevel;startGame();};
+  } else if(gameMode==='pve'&&w===1&&pveLevel>=3){
+    // Beat the Legend -> campaign complete, next run starts fresh
+    document.getElementById('resE').textContent='🏆';
+    document.getElementById('resT').textContent=T('campaignWin');
+    pveLevel=1;savePveProgress();
+    btnNext.style.display='block';
+    btnNext.textContent=T('btnRestartCampaign');
+    btnNext.onclick=function(){selLv=1;startGame();};
+  } else {
+    btnNext.style.display='none';
+    btnNext.onclick=null;
+  }
   SS('screen-result');
 }
 function openRules(){document.getElementById('rulesModal').classList.add('open');}
@@ -1454,7 +1551,10 @@ function listenMoves(){
     var ob=G.sc.slice();
     doMove(G,d.r,d.c);draw(G);updateHUD();
     var og=G.sc[2-myPNum]-ob[2-myPNum];
-    if(og>0) playCaptureSound(og);
+    if(og>0){
+      playCaptureSound(og);
+      spawnCaptureAnim(animCellsFromCap(G._lastCap),d.p===1?CC.p1:CC.p2);
+    }
     checkEarly(G);
     if(G.over) setTimeout(showResult,600);
   });
