@@ -275,8 +275,9 @@ body{background:#050310;color:#fff;min-height:100dvh}
 .ol-st.ok{color:#4de88e}.ol-st.err{color:#ff6060}
 .wdots::after{content:'.';animation:wda 1.4s infinite}
 @keyframes wda{0%{content:'.'}33%{content:'..'}66%{content:'...'}}
-.join-row{display:flex;gap:7px}
-.join-inp{flex:1;background:rgba(22,8,0,.9);border:2px solid rgba(180,120,30,.22);
+.join-row{display:flex;gap:7px;width:100%}
+.join-row .btn{flex-shrink:0}
+.join-inp{flex:1;min-width:0;width:100%;background:rgba(22,8,0,.9);border:2px solid rgba(180,120,30,.22);
   border-radius:10px;padding:10px;font-family:'Russo One',sans-serif;
   font-size:1.3rem;letter-spacing:.22em;color:#fff;outline:none;text-align:center;transition:all .2s}
 .join-inp:focus{border-color:rgba(255,200,0,.52)}
@@ -372,10 +373,14 @@ body{background:#050310;color:#fff;min-height:100dvh}
 }
 /* Short landscape screens (phones): compact side panel */
 @media(orientation:landscape) and (min-width:600px) and (max-height:520px){
-  .logo-section{top:38%}
-  .trademark-img{max-height:30vh}
+  .logo-section{top:30%}
+  .trademark-img{max-height:32vh;width:clamp(120px,30vw,220px)}
+  .tagline{display:none}
   .mtool{min-height:36px}
   .menu-tools{gap:6px}
+  .mcard{padding:5px 6px}
+  .mcard .char-img{width:40px;height:40px}
+  .lv-cards{flex-direction:row;max-width:none}
   .hud{padding:4px;gap:3px}
   .phud,.phud-r{flex-direction:row;gap:5px;padding:3px 4px}
   .phud-r{flex-direction:row-reverse}
@@ -427,6 +432,20 @@ body{background:#050310;color:#fff;min-height:100dvh}
 .modal h3{font-size:.83rem;color:#fff;margin:12px 0 5px;font-weight:400}
 .modal ul{padding-left:16px}
 .rules-modal{max-width:560px}
+.st-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,200,100,.12);font-size:.82rem;color:#ffd98a}
+.seg{display:flex;gap:3px;background:rgba(255,255,255,.05);border-radius:10px;padding:3px}
+.seg button{background:transparent;border:1.5px solid transparent;border-radius:8px;color:rgba(255,255,255,.55);padding:6px 10px;min-width:40px;font-family:'Russo One',sans-serif;font-size:.72rem;cursor:pointer}
+.seg button.on{background:rgba(160,140,255,.3);border-color:rgba(180,160,255,.55);color:#fff}
+.st-ver{font-size:.62rem!important;color:rgba(255,255,255,.3)!important;text-align:center;margin-top:10px!important}
+.mtool-gear{flex:0 0 52px;font-size:1.25rem;padding:0}
+.lv-card{position:relative;width:100%}
+.lv-card.locked{opacity:.45;cursor:not-allowed}
+.lv-card.locked::after{content:'🔒';position:absolute;right:12px;top:10px;font-size:1.1rem}
+.lv-card.done::after{content:'✔';position:absolute;right:12px;top:8px;color:#4de88e;font-size:1.1rem}
+.lv-card.champ::after{content:'🏆';position:absolute;right:12px;top:8px;font-size:1.1rem}
+.lv-ico{font-size:2rem}
+.lv-sz{font-size:.6rem;color:rgba(255,210,140,.35);margin-top:2px}
+.res-stats{font-size:.7rem;color:rgba(255,210,140,.5);margin:-8px 0 14px;text-align:center}
 .rgoal{font-size:.86rem!important;color:#ffd98a!important;margin-bottom:12px!important}
 .rsteps{display:flex;gap:8px;margin:4px 0 6px}
 .rstep{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;
@@ -501,6 +520,8 @@ body{background:#050310;color:#fff;min-height:100dvh}
   .btn-sm{padding:9px 11px;font-size:.66rem;min-height:40px}
   .gfoot{margin-top:4px;gap:6px}
   .zoom-row{display:none}   /* phones: pinch to zoom instead of buttons */
+  .gfoot .btxt{display:none}  /* phones: icon-only Menu / Restart / Rules so all buttons fit one row */
+  .gfoot .btn-sm{padding:9px 12px}
 }
 /* Touch devices: no sticky hover states after a tap */
 @media(hover:none){
@@ -564,6 +585,7 @@ body{background:#050310;color:#fff;min-height:100dvh}
       </div>
       <div class="menu-tools">
         <button class="mtool mtool-rules" onclick="openRules()"><span class="mtool-ico">📜</span><span class="mtool-txt" id="mRulesBtn">HOW TO PLAY</span></button>
+        <button class="mtool mtool-gear" onclick="openSettings()" id="mGearBtn" title="Settings">⚙</button>
         <div class="mtool mtool-lang" role="group" aria-label="Language">
           <span class="lseg-icon">🌐</span>
           <button class="lseg" id="lbRU" onclick="setLang('ru')">RU</button>
@@ -573,6 +595,18 @@ body{background:#050310;color:#fff;min-height:100dvh}
     </div>
   </div>
 </div>
+<!-- LEVEL SELECT -->
+<div id="screen-level" class="screen iscr">
+  <div class="stitle" id="lvTitle">Choose Your Opponent</div>
+  <div class="ssub" id="lvSub">Beat a level to unlock the next one</div>
+  <div class="lv-cards">
+    <button class="lv-card" id="lvc1" onclick="pickLevel(1)"><div class="lv-ico lv-ico-1">🟢</div><div class="lv-name" id="lv1n">Rookie</div><div class="lv-desc" id="lv1d"></div><div class="lv-sz" id="lv1s">10×10</div></button>
+    <button class="lv-card" id="lvc2" onclick="pickLevel(2)"><div class="lv-ico lv-ico-2">🔵</div><div class="lv-name" id="lv2n">Warrior</div><div class="lv-desc" id="lv2d"></div><div class="lv-sz" id="lv2s">15×15</div></button>
+    <button class="lv-card" id="lvc3" onclick="pickLevel(3)"><div class="lv-ico lv-ico-3">🔴</div><div class="lv-name" id="lv3n">Legend</div><div class="lv-desc" id="lv3d"></div><div class="lv-sz" id="lv3s">20×20</div></button>
+  </div>
+  <button class="btn btn-ghost" onclick="SS('screen-menu')" id="btnBackLv">← Back</button>
+</div>
+
 <!-- NAMES -->
 <div id="screen-name" class="screen iscr">
   <div class="stitle" id="nameTitle">Name Your Warriors</div>
@@ -607,6 +641,7 @@ body{background:#050310;color:#fff;min-height:100dvh}
         <div style="font-size:.65rem;color:rgba(255,210,140,.34);font-weight:400" id="codeLbl">ROOM CODE — tap to copy</div>
         <div class="code-n" id="codeVal">——</div>
         <div class="code-h" id="codeHint">📋 Share with your friend</div>
+        <button class="btn btn-ghost" style="margin-top:8px" onclick="event.stopPropagation();shareRoom()">🔗 <span id="shareLbl">Share link</span></button>
       </div>
       <button class="btn btn-blue" id="btnCreate" onclick="createRoom()" style="width:100%;font-family:'Russo One',sans-serif">🌐 Create Room</button>
     </div>
@@ -650,10 +685,11 @@ body{background:#050310;color:#fff;min-height:100dvh}
   </div>
   <div class="canvas-wrap" id="cwrap"><canvas id="gameCanvas"></canvas></div>
   <div class="gfoot">
-    <button class="btn btn-sm" onclick="askMenu()" id="gMenu">🏠 Menu</button>
-    <button class="btn btn-sm" id="btnRst" onclick="askRestart()">🔄 Restart</button>
+    <button class="btn btn-sm" onclick="askMenu()" title="Menu">🏠 <span class="btxt" id="gMenu">Menu</span></button>
+    <button class="btn btn-sm" id="btnRst" onclick="askRestart()" title="Restart">🔄 <span class="btxt" id="gRestart">Restart</span></button>
+    <button class="btn btn-sm" id="btnUndo" onclick="undoMove()" style="display:none">↶ <span id="gUndo">Undo</span></button>
     <button class="btn btn-sm btn-resign" onclick="askResign()">🏳 <span id="gResign">Resign</span></button>
-    <button class="btn btn-sm" onclick="openRules()" id="gRules">📜 Rules</button>
+    <button class="btn btn-sm" onclick="openRules()" title="Rules">📜 <span class="btxt" id="gRules">Rules</span></button>
     <div class="zoom-row">
       <button class="btn btn-sm zoom-btn" onclick="zoomBy(1/1.3)" id="zoomOut" title="Zoom out">−</button>
       <button class="btn btn-sm zoom-btn" onclick="zoomBy(1.3)" id="zoomIn" title="Zoom in">+</button>
@@ -677,8 +713,11 @@ body{background:#050310;color:#fff;min-height:100dvh}
     </div>
   </div>
   <div class="res-detail" id="resD"></div>
+  <div class="res-stats" id="resS"></div>
   <div class="res-btns">
     <button class="btn btn-gold" id="btnNext" style="display:none;width:100%">Play Again →</button>
+    <button class="btn btn-blue" id="btnRematch" style="display:none;width:100%" onclick="askRematch()">🔁 Rematch</button>
+    <div class="ol-st" id="rematchSt" style="display:none"></div>
     <button class="btn btn-sm" style="width:100%;padding:10px" onclick="restartGame()" id="rPlayAgain">🔄 Play Again</button>
     <button class="btn btn-ghost" style="width:100%" onclick="goMenu()" id="rMenu">🏠 Main Menu</button>
   </div>
@@ -709,6 +748,20 @@ body{background:#050310;color:#fff;min-height:100dvh}
     </ul>
     <br>
     <button class="btn btn-gold" onclick="closeRules()" style="width:100%" id="rOkBtn">Let the battle begin! ⚔️</button>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="overlay" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal" style="max-width:420px">
+    <h2 id="stTitle">⚙ Settings</h2>
+    <div class="st-row"><span id="stSound">Sound</span><div class="seg" id="segSound"></div></div>
+    <div class="st-row"><span id="stVibe">Vibration</span><div class="seg" id="segVibe"></div></div>
+    <div class="st-row"><span id="stTimer">Move timer vs AI</span><div class="seg" id="segTimer"></div></div>
+    <h3 id="stStatsH">📊 Your statistics</h3>
+    <p id="stStats"></p>
+    <p class="st-ver" id="stVer"></p>
+    <button class="btn btn-gold" onclick="closeSettings()" style="width:100%;margin-top:8px" id="stOk">OK</button>
   </div>
 </div>
 
@@ -775,12 +828,17 @@ var TR = {
     mPvpT:'BATTLE 1x1', mPvpS:'Duel on one device',
     mOnT:'ONLINE BATTLE', mOnS:'Challenge a friend from any device',
     mRulesBtn:'How to play',
-    lvTitle:'Choose Your Opponent', lvSub:'Select the AI difficulty level',
+    lvTitle:'Choose Your Opponent', lvSub:'Beat a level to unlock the next one',
+    stTitle:'⚙ Settings', stSound:'Sound', stVibe:'Vibration', stTimer:'Move timer vs AI',
+    stOn:'On', stOff:'Off', stStatsH:'📊 Your statistics', stOk:'OK',
+    stStatsTxt:'Games: {g} · Wins: {w} ({p}%) · Current streak: {s} · Best streak: {b}',
+    gUndo:'Undo', resStats:'Moves: {m} · Time: {t} · Biggest capture: {c}',
+    lvLocked:'Beat the previous level first', btnBackLv:'← Back',
     lv1n:'Rookie',
     lv2n:'Warrior',
     lv3n:'Legend',
     btnStart:'⚔️ Start Battle!', btnBack:'← Back',
-    nameTitle:'Name Your Warriors', nameSub:'Enter your name',
+    nameTitle:'Your Name', nameSub:'How should your opponent see you?',
     lbl1:'Your Name', lbl2:'Green Pix — Player 2',
     ne1:'⚠ Enter a name to continue', ne2:'⚠ Enter Player 2 name',
     btnCont:'▶ Continue',
@@ -796,10 +854,10 @@ var TR = {
     lvSubPvp:'Choose field size', lvSubPve:'Choose battle size',
     yourTurn:'Your move ▶', oppTurn:'Waiting for opponent…',
     aiTurn:'⚔️ Thinking…', gameOver:'Battle over!',
-    draw:'TIE — Equal warriors!', wins:' wins the battle!',
+    draw:'TIE — Equal warriors!', wins:' — victory!',
     drawD:'Both captured ', andPts:' points.',
-    winD:' captured ', pts:' pts, ', only:' only ',
-    gMenu:'🏠 Menu', gRestart:'🔄 Restart', gRules:'📜 Rules',
+    winD:': ', pts:' pts, ', only:' ',
+    gMenu:'Menu', gRestart:'Restart', gRules:'Rules',
     rPlayAgain:'🔄 Play Again', rMenu:'🏠 Main Menu',
     earlyWin:'Early Victory',
     btnNextLevel:'Next Level →', btnRestartCampaign:'🔄 New Campaign', campaignWin:'🏆 Campaign Complete!',
@@ -827,6 +885,11 @@ var TR = {
     connLost:'Connection lost. Returning to menu…',
     moveFailed:'Move failed to send, retrying…',
     moveFailedFinal:'Could not send your move. Check connection.',
+    youTag:' (you)', oppStalled:'Opponent is not moving…',
+    oppTimeout:'Opponent ran out of time — you win!', youTimeout:'You ran out of time.', timeoutTag:'Timeout',
+    noConn:'⚠ No connection…', connBack:'Connection restored',
+    btnRematch:'🔁 Rematch', rematchWait:'Waiting for opponent…', rematchOffer:'Opponent wants a rematch!',
+    shareLbl:'Share link', shareText:'Join my DOTS WAR battle! Room code: ', linkCopied:'🔗 Link copied',
     cfMenuT:'Leave the battle?', cfMenuTx:'Current progress will be lost.',
     cfMenuTxOnl:'Leaving counts as a loss — your opponent wins.',
     cfRestartT:'Restart the battle?', cfRestartTx:'Current progress will be lost.',
@@ -840,12 +903,17 @@ var TR = {
     mPvpT:'БОЙ 1х1', mPvpS:'Дуэль на одном устройстве',
     mOnT:'ОНЛАЙН БОЙ', mOnS:'Сразитесь с другом с любого устройства',
     mRulesBtn:'Как играть',
-    lvTitle:'Выберите противника', lvSub:'Выберите уровень сложности ИИ',
+    lvTitle:'Выберите противника', lvSub:'Победите, чтобы открыть следующий уровень',
+    stTitle:'⚙ Настройки', stSound:'Звук', stVibe:'Вибрация', stTimer:'Таймер хода против ИИ',
+    stOn:'Вкл', stOff:'Выкл', stStatsH:'📊 Ваша статистика', stOk:'ОК',
+    stStatsTxt:'Партий: {g} · Побед: {w} ({p}%) · Серия: {s} · Лучшая серия: {b}',
+    gUndo:'Отменить', resStats:'Ходов: {m} · Время: {t} · Крупнейший захват: {c}',
+    lvLocked:'Сначала пройдите предыдущий уровень', btnBackLv:'← Назад',
     lv1n:'Новичок',
     lv2n:'Воин',
     lv3n:'Легенда',
     btnStart:'⚔️ В бой!', btnBack:'← Назад',
-    nameTitle:'Имена воинов', nameSub:'Введите своё имя',
+    nameTitle:'Ваше имя', nameSub:'Как вас будет видеть соперник?',
     lbl1:'Ваше имя', lbl2:'Зелёные — Игрок 2',
     ne1:'⚠ Введите имя, чтобы продолжить', ne2:'⚠ Введите имя второго игрока',
     btnCont:'▶ Продолжить',
@@ -861,10 +929,10 @@ var TR = {
     lvSubPvp:'Выберите размер поля', lvSubPve:'Выберите размер поля битвы',
     yourTurn:'Ваш ход ▶', oppTurn:'Ждём соперника…',
     aiTurn:'⚔️ ИИ думает…', gameOver:'Битва завершена!',
-    draw:'НИЧЬЯ — Равные воины!', wins:' побеждает!',
-    drawD:'Оба захватили по ', andPts:' очков.',
-    winD:' захватил ', pts:' очков, ', only:' лишь ',
-    gMenu:'🏠 Меню', gRestart:'🔄 Заново', gRules:'📜 Правила',
+    draw:'НИЧЬЯ — Равные воины!', wins:' — победа!',
+    drawD:'У обоих по ', andPts:' очк.',
+    winD:': ', pts:' очк., ', only:' ',
+    gMenu:'Меню', gRestart:'Заново', gRules:'Правила',
     rPlayAgain:'🔄 Сыграть снова', rMenu:'🏠 Главное меню',
     earlyWin:'Досрочная победа',
     btnNextLevel:'Следующий уровень →', btnRestartCampaign:'🔄 Новая кампания', campaignWin:'🏆 Кампания пройдена!',
@@ -892,6 +960,11 @@ var TR = {
     connLost:'Соединение потеряно. Возврат в меню…',
     moveFailed:'Ход не отправился, повтор…',
     moveFailedFinal:'Не удалось отправить ход. Проверьте соединение.',
+    youTag:' (вы)', oppStalled:'Соперник не ходит…',
+    oppTimeout:'У соперника вышло время — вы победили!', youTimeout:'У вас вышло время.', timeoutTag:'Таймаут',
+    noConn:'⚠ Нет связи…', connBack:'Связь восстановлена',
+    btnRematch:'🔁 Реванш', rematchWait:'Ждём соперника…', rematchOffer:'Соперник хочет реванш!',
+    shareLbl:'Отправить ссылку', shareText:'Сыграй со мной в DOTS WAR! Код комнаты: ', linkCopied:'🔗 Ссылка скопирована',
     cfMenuT:'Выйти из битвы?', cfMenuTx:'Текущий прогресс будет потерян.',
     cfMenuTxOnl:'Выход засчитается как поражение — победит соперник.',
     cfRestartT:'Начать заново?', cfRestartTx:'Текущий прогресс будет потерян.',
@@ -901,14 +974,14 @@ var TR = {
 };
 function T(k){ return (TR[lang]&&TR[lang][k]) || TR.en[k] || k; }
 
-var TEXT_IDS = ['mTag','mPveT','mPveS','mPvpT','mPvpS','mOnT','mOnS',
+var TEXT_IDS = ['mTag','btnRematch','shareLbl','stTitle','stSound','stVibe','stTimer','stStatsH','stOk','gUndo','btnBackLv','mPveT','mPveS','mPvpT','mPvpS','mOnT','mOnS',
   'mRulesBtn','lvTitle','lvSub','lv1n','lv2n','lv3n',
   'btnStart','nameTitle','nameSub','lbl1','lbl2','ne1','ne2','btnCont',
   'olTitle','olSub','tCreate','tJoin','fldSizeLbl','codeLbl','codeHint',
   'enterCodeLbl','btnJoin','btnBackOl','rulesH','rGoal','rGoalT','rHow',
   'rs1t','rs2t','rs3t','rl5','rOnline','rol1','rol2','rLvl',
   'rlv1n','rlv1d','rlv2n','rlv2d','rlv3n','rlv3d','rOkBtn',
-  'gMenu','gRules','rPlayAgain','rMenu','copyR',
+  'gMenu','gRestart','gRules','rPlayAgain','rMenu','copyR',
   'gResign','resignTitle','resignText','resignYesBtn','resignNoBtn'];
 
 function applyLang(){
@@ -919,7 +992,9 @@ function applyLang(){
     var el=document.getElementById(id);
     if(el){ var v=T(id); if(v!==id) el.textContent=v; }
   });
-  document.getElementById('btnRst').textContent = T('gRestart');
+  ['1','2','3'].forEach(function(i){ var d=document.getElementById('lv'+i+'d'); if(d) d.textContent=T('rlv'+i+'d'); });
+  if(document.getElementById('settingsModal').classList.contains('open')) renderSettings();
+  if(document.getElementById('screen-level').classList.contains('active')) refreshLevelCards();
   document.getElementById('btnCont').textContent = T('btnCont');
   document.getElementById('btnBackNm').textContent = T('btnBack');
   document.getElementById('btnBackOl').textContent = T('btnBackOl');
@@ -954,18 +1029,65 @@ var G=null, gameMode='pve', selLv=1, olFSz=1;
 var aiTimer=null, aiLock=false;
 var playerNames=['Red Dots','Green Pix'];
 var db=null, roomRef=null, movesRef=null, resignRef=null, myPNum=1, isHost=false, olReady=false;
+var serverOffset=0, turnInfo=null, olWatchId=null, claimSent=false, offline=false, olGen=0, roomCode='', pendingRoom=null;
+var olRefs=[];   // listeners attached for the current game (detached on rematch/leave)
 // Press-to-aim input: pointer down shows a preview, holding/moving shows a
 // magnifier, releasing places the dot. Works the same for touch and mouse.
 var pressActive=false, pressTimer=null, pressX=0, pressY=0, loupeShow=false, loupeX=0, loupeY=0;
 var HOLD_MS=300, PRESS_SLOP=6;
 var curScreen='screen-menu', _cfCb=null;
-var turnTimerId=null, turnGraceId=null, TURN_SECS=15, TURN_GRACE=5;
+var turnTimerId=null, turnGraceId=null, TURN_SECS=15, TURN_GRACE=5, TURN_WARN=5;
+var APP_VERSION='2.0.0';
+var SET={sound:true,vibe:true,pveTimer:15};
+(function(){ try{ var v=JSON.parse(localStorage.getItem('dwSet')||'{}'); for(var k in v) if(k in SET) SET[k]=v[k]; }catch(e){} })();
+function saveSet(){ try{localStorage.setItem('dwSet',JSON.stringify(SET));}catch(e){} }
+var STATS={g:0,w:0,s:0,b:0};
+(function(){ try{ var v=JSON.parse(localStorage.getItem('dwStats')||'{}'); for(var k in v) if(k in STATS) STATS[k]=v[k]|0; }catch(e){} })();
+function saveStats(){ try{localStorage.setItem('dwStats',JSON.stringify(STATS));}catch(e){} }
+function recordResult(won,draw){
+  STATS.g++; if(won){STATS.w++;STATS.s++; if(STATS.s>STATS.b)STATS.b=STATS.s;} else if(!draw){STATS.s=0;}
+  saveStats();
+}
+function fmtTime(ms){ var s=Math.round(ms/1000); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+function tpl(str,o){ return str.replace(/\{(\w+)\}/g,function(_,k){return o[k];}); }
+// ── settings modal ──
+function openSettings(){ renderSettings(); document.getElementById('settingsModal').classList.add('open'); }
+function closeSettings(){ document.getElementById('settingsModal').classList.remove('open'); }
+function segHtml(id,opts,cur,key){
+  return opts.map(function(o){ return '<button class="'+(String(o.v)===String(cur)?'on':'')+'" onclick="setOpt(\''+key+'\','+JSON.stringify(o.v)+')">'+o.l+'</button>'; }).join('');
+}
+function renderSettings(){
+  var onoff=[{v:true,l:T('stOn')},{v:false,l:T('stOff')}];
+  document.getElementById('segSound').innerHTML=segHtml('segSound',onoff,SET.sound,'sound');
+  document.getElementById('segVibe').innerHTML=segHtml('segVibe',onoff,SET.vibe,'vibe');
+  document.getElementById('segTimer').innerHTML=segHtml('segTimer',[{v:15,l:'15'},{v:30,l:'30'},{v:60,l:'60'},{v:0,l:T('stOff')}],SET.pveTimer,'pveTimer');
+  var pct=STATS.g?Math.round(STATS.w*100/STATS.g):0;
+  document.getElementById('stStats').textContent=tpl(T('stStatsTxt'),{g:STATS.g,w:STATS.w,p:pct,s:STATS.s,b:STATS.b});
+  document.getElementById('stVer').textContent='DOTS WAR v'+APP_VERSION+' · '+T('copyR');
+}
+function setOpt(k,v){ SET[k]=v; saveSet(); renderSettings(); if(k==='pveTimer'&&G&&gameMode==='pve') refreshTurnTimer(); }
+function vibrate(pattern){ if(SET.vibe&&navigator.vibrate) try{navigator.vibrate(pattern);}catch(e){} }
 
 // PvE campaign progress: 1=Rookie(small board), 2=Warrior(medium), 3=Legend(large)
 var pveLevel=1;
-var pveLossStreak=0;
-function loadPveProgress(){try{var v=parseInt(localStorage.getItem('dwPveLv'),10);if(v>=1&&v<=3)pveLevel=v;var l=parseInt(localStorage.getItem('dwLoss'),10);if(l>=0)pveLossStreak=l;}catch(e){}}
-function savePveProgress(){try{localStorage.setItem('dwPveLv',String(pveLevel));localStorage.setItem('dwLoss',String(pveLossStreak));}catch(e){}}
+var pveLossStreak=0, pveMax=1, pveChamp=false;
+function loadPveProgress(){try{
+  var v=parseInt(localStorage.getItem('dwPveLv'),10);if(v>=1&&v<=3)pveLevel=v;
+  var m=parseInt(localStorage.getItem('dwPveMax'),10); pveMax=(m>=1&&m<=3)?m:Math.max(1,pveLevel);
+  pveChamp=localStorage.getItem('dwChamp')==='1';
+  var l=parseInt(localStorage.getItem('dwLoss'),10);if(l>=0)pveLossStreak=l;
+}catch(e){}}
+function savePveProgress(){try{localStorage.setItem('dwPveLv',String(pveLevel));localStorage.setItem('dwPveMax',String(pveMax));localStorage.setItem('dwChamp',pveChamp?'1':'0');localStorage.setItem('dwLoss',String(pveLossStreak));}catch(e){}}
+function refreshLevelCards(){
+  for(var i=1;i<=3;i++){
+    var el=document.getElementById('lvc'+i); if(!el) continue;
+    el.className='lv-card'+(i>pveMax?' locked':'')+(i===pveLevel?' sel':'')+(i<pveMax?' done':'')+(i===3&&pveChamp?' champ':'');
+  }
+}
+function pickLevel(l){
+  if(l>pveMax){ showToast(T('lvLocked')); return; }
+  pveLevel=l; selLv=l; savePveProgress(); startGame();
+}
 loadPveProgress();
 
 // Capture-flash animation state
@@ -977,7 +1099,7 @@ var activeAnims=[], animRAF=null;
 function mkGame(n,mode,level){
   return{n:n,mode:mode,level:level,
     board:Array.from({length:n},function(){return new Array(n).fill(EMPTY);}),
-    cur:1,sc:[0,0],over:false,last:null,earlyW:0};
+    cur:1,sc:[0,0],over:false,last:null,earlyW:0,moveCount:0};
 }
 function canPl(g,r,c){return r>=0&&r<g.n&&c>=0&&c<g.n&&g.board[r][c]===EMPTY;}
 function vMoves(g){
@@ -1031,7 +1153,7 @@ function applyCaps(g,player,caps){
 }
 function doMove(g,r,c){
   if(!canPl(g,r,c)) return false;
-  g.board[r][c]=g.cur; g.last=[r,c]; g._ver=(g._ver|0)+1;
+  g.board[r][c]=g.cur; g.last=[r,c]; g._ver=(g._ver|0)+1; g.moveCount=(g.moveCount|0)+1;
   applyCaps(g,g.cur,findCaps(g,g.cur));
   g.cur=3-g.cur;
   if(vMoves(g).length===0) g.over=true;
@@ -1511,11 +1633,16 @@ function requestAIMove(g,cb){
 var _ac = null;
 function getAC(){
   if(!_ac) try{ _ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+  if(_ac&&_ac.state==='suspended') try{ _ac.resume(); }catch(e){}
   return _ac;
 }
+// Mobile browsers only allow sound after a user gesture: warm the context up on the first touch/click
+(function(){ var done=false; function unlock(){ if(done) return; done=true; getAC(); } ['touchstart','mousedown','keydown'].forEach(function(ev){ document.addEventListener(ev,unlock,{once:true,passive:true}); }); })();
 
 // Play a pleasant capture chime — ascending arpeggio
 function playCaptureSound(count){
+  vibrate(count>=3?[30,40,70]:35);
+  if(!SET.sound) return;
   var ac = getAC(); if(!ac) return;
   // Notes: C5-E5-G5 arpeggio, scaled by capture count (more = higher/louder)
   var notes = [523.25, 659.25, 783.99]; // C5, E5, G5
@@ -1922,11 +2049,12 @@ function askRestart(){
 function initMode(mode){
   gameMode=mode;
   if(mode==='pve'){
-    selLv=pveLevel;
-    startGame();
+    refreshLevelCards();
+    SS('screen-level');
     return;
   }
   SS('screen-name');
+  try{ var saved=localStorage.getItem('dwName'); if(saved&&!document.getElementById('ni1').value) document.getElementById('ni1').value=saved; }catch(e){}
   loadFirebase().catch(function(){});   // start fetching the SDK early; errors surface later in createRoom/joinRoom
   setTimeout(function(){document.getElementById('ni1').focus();},80);
 }
@@ -1937,9 +2065,11 @@ function confirmNames(){
   document.getElementById('ni1').classList.remove('bad');document.getElementById('ne1').classList.remove('show');
   if(!n1){document.getElementById('ni1').classList.add('bad');document.getElementById('ne1').classList.add('show');document.getElementById('ni1').focus();return;}
   playerNames[0]=n1;
+  try{localStorage.setItem('dwName',n1);}catch(e){}
   buildOlLvs();SS('screen-online');setOS('','');
   document.getElementById('codeBox').style.display='none';
   document.getElementById('btnCreate').style.display='block';
+  if(pendingRoom){ var code=pendingRoom; pendingRoom=null; switchTab('j'); document.getElementById('joinIn').value=code; joinRoom(); }
 }
 function startGame(){
   if(gameMode==='online'&&!olReady) return;
@@ -1958,7 +2088,10 @@ function startGame(){
     n=FIELD_SIZES[olFSz];
   }
   G=mkGame(n,gameMode,selLv);
+  G.stats={start:Date.now(),maxCap:0};
+  undoStack=[]; undoLeft=undoLimit();
   SS('screen-game');
+  refreshUndoBtn();
   document.getElementById('btnRst').style.display=gameMode==='online'?'none':'';
   // Delay to allow DOM to paint and measure correctly
   requestAnimationFrame(function(){
@@ -1977,8 +2110,10 @@ function updateHUD(){
   if(!G) return;
   document.getElementById('sc1').textContent=G.sc[0];
   document.getElementById('sc2').textContent=G.sc[1];
-  document.getElementById('p1nm').textContent=playerNames[0];
-  document.getElementById('p2nm').textContent=playerNames[1];
+  var n1=playerNames[0], n2=playerNames[1];
+  if(gameMode==='online'){ if(myPNum===1) n1+=T('youTag'); else n2+=T('youTag'); }
+  document.getElementById('p1nm').textContent=n1;
+  document.getElementById('p2nm').textContent=n2;
   if(G.over){
     document.getElementById('turnT').textContent=T('gameOver');
     document.getElementById('phud1').classList.remove('act');
@@ -1987,8 +2122,8 @@ function updateHUD(){
   } else {
     var isP1=G.cur===1;
     var txt=isP1?playerNames[0]:playerNames[1];
-    if(gameMode==='pve'&&!isP1) txt=T('aiTurn');
-    else if(gameMode==='online') txt=G.cur===myPNum?T('yourTurn'):T('oppTurn');
+    if(gameMode==='pve') txt=isP1?T('yourTurn'):T('aiTurn');
+    else if(gameMode==='online') txt=offline?T('noConn'):(G.cur===myPNum?T('yourTurn'):T('oppTurn'));
     document.getElementById('turnT').textContent=txt;
     document.getElementById('phud1').classList.toggle('act',isP1);
     document.getElementById('phud2').classList.toggle('act',!isP1);
@@ -2019,7 +2154,9 @@ function schedAI(){
       if(aiGained>0){
         playCaptureSound(aiGained);
         spawnCaptureAnim(animCellsFromCap(G._lastCap),CC.p2);
+        if(G.stats&&aiGained>G.stats.maxCap) G.stats.maxCap=aiGained;
       }
+      refreshUndoBtn();
     }
     aiLock=false;checkEarly(G);
     if(G.over){clearTurnTimer();setTimeout(showResult,600);}
@@ -2027,8 +2164,28 @@ function schedAI(){
     },wait);
   });
 }
+var undoStack=[], undoLeft=0;
+function undoLimit(){ return gameMode!=='pve'?0 : G&&G.level===1?99 : G&&G.level===2?1 : 0; }
+function snapshotG(){ return {board:G.board.map(function(r){return r.slice();}),sc:G.sc.slice(),cur:G.cur,last:G.last,moveCount:G.moveCount,over:G.over,earlyW:G.earlyW,_ver:G._ver}; }
+function refreshUndoBtn(){
+  var b=document.getElementById('btnUndo'); if(!b) return;
+  var show=gameMode==='pve'&&G&&undoLimit()>0;
+  b.style.display=show?'':'none';
+  if(show){ b.disabled=!(undoStack.length&&undoLeft>0&&!G.over); b.innerHTML='↶ <span id="gUndo">'+T('gUndo')+'</span>'+(undoLimit()<99?' ('+undoLeft+')':''); }
+}
+function undoMove(){
+  if(gameMode!=='pve'||!G||G.over||!undoStack.length||undoLeft<=0) return;
+  // cancel a pending AI reply, then restore the position before the player's last move
+  aiToken++; if(aiTimer){clearTimeout(aiTimer);aiTimer=null;} aiLock=false;
+  document.getElementById('aiThink').classList.remove('show'); document.getElementById('phud2').classList.remove('thinking');
+  var sn=undoStack.pop();
+  G.board=sn.board; G.sc=sn.sc; G.cur=sn.cur; G.last=sn.last; G.moveCount=sn.moveCount; G.over=false; G.earlyW=0; G._ver=(sn._ver|0)+1000;
+  undoLeft--; activeAnims=[]; layerKey='';
+  draw(G); updateHUD(); refreshUndoBtn();
+}
 function commitMove(r,c){
   var before=G.sc.slice();
+  if(gameMode==='pve'&&G.cur===1){ undoStack.push(snapshotG()); if(undoStack.length>40) undoStack.shift(); }
   doMove(G,r,c);
   if(gameMode==='online') pushMove(r,c);
   draw(G);updateHUD();
@@ -2038,7 +2195,9 @@ function commitMove(r,c){
   if(gained>0){
     playCaptureSound(gained);
     spawnCaptureAnim(animCellsFromCap(G._lastCap),justMoved===1?CC.p1:CC.p2);
+    if(G.stats&&gained>G.stats.maxCap) G.stats.maxCap=gained;
   }
+  refreshUndoBtn();
   checkEarly(G);
   if(G.over){clearTurnTimer();setTimeout(showResult,600);return;}
   if(gameMode==='pve') schedAI();
@@ -2051,6 +2210,7 @@ function commitMove(r,c){
 function localTurnActive(){
   return !!G && !G.over && ((gameMode==='pve'&&G.cur===1) || (gameMode==='online'&&G.cur===myPNum));
 }
+function turnSecs(){ return gameMode==='online' ? TURN_SECS : (SET.pveTimer|0); }
 function clearTurnTimer(){
   if(turnTimerId){clearInterval(turnTimerId);turnTimerId=null;}
   if(turnGraceId){clearTimeout(turnGraceId);turnGraceId=null;}
@@ -2060,13 +2220,15 @@ function clearTurnTimer(){
 function startTurnTimer(){
   clearTurnTimer();
   if(!localTurnActive()) return;
+  var secs=turnSecs(); if(!secs) return;          // timer switched off (PvE setting)
   var startT=Date.now();
-  var eb=document.getElementById('edgeBlink'); if(eb) eb.classList.add('show');
   turnTimerId=setInterval(function(){
     if(!localTurnActive()){clearTurnTimer();return;}
-    var left=TURN_SECS-Math.floor((Date.now()-startT)/1000);
+    var left=secs-Math.floor((Date.now()-startT)/1000);
     var tt=document.getElementById('turnTimer');
     if(tt) tt.textContent = left>0 ? left : '';
+    var eb=document.getElementById('edgeBlink');
+    if(eb&&left<=TURN_WARN&&left>0) eb.classList.add('show');   // calm first, soft blink in the last seconds
     if(left<=0){
       clearInterval(turnTimerId);turnTimerId=null;
       var eb2=document.getElementById('edgeBlink'); if(eb2) eb2.classList.add('urgent');
@@ -2181,28 +2343,32 @@ function showResult(){
   var s1=G.sc[0],s2=G.sc[1],w=G.earlyW||(s1>s2?1:s2>s1?2:0);
   var n1=playerNames[0],n2=playerNames[1];
   document.getElementById('resE').textContent=w===0?'🤝':w===1?'🔴':'🟢';
-  var ew=G.resigned?' ('+T('resignedTag')+')':(G.earlyW?' ('+T('earlyWin')+')':'');
+  var ew=G.resigned?' ('+T('resignedTag')+')':G.timeout?' ('+T('timeoutTag')+')':(G.earlyW?' ('+T('earlyWin')+')':'');
   document.getElementById('resT').textContent=(w===0?T('draw'):(w===1?n1:n2)+T('wins'))+ew;
   document.getElementById('rs1').textContent=s1;document.getElementById('rs2').textContent=s2;
   document.getElementById('rw1').textContent=n1;document.getElementById('rw2').textContent=n2;
+  var st=G.stats||{start:Date.now(),maxCap:0};
+  document.getElementById('resS').textContent=tpl(T('resStats'),{m:G.moveCount|0,t:fmtTime(Date.now()-st.start),c:st.maxCap});
+  if(!G._counted){ G._counted=true; var me=gameMode==='online'?myPNum:1; recordResult(w===me, w===0); }
   if(w===0) document.getElementById('resD').textContent=T('drawD')+s1+T('andPts');
-  else{var wn=w===1?n1:n2,ln=w===1?n2:n1,ws=w===1?s1:s2,ls=w===1?s2:s1;document.getElementById('resD').textContent=wn+T('winD')+ws+T('pts')+ln+' —'+T('only')+ls+'.';}
+  else{var wn=w===1?n1:n2,ln=w===1?n2:n1,ws=w===1?s1:s2,ls=w===1?s2:s1;document.getElementById('resD').textContent=wn+T('winD')+ws+T('pts')+ln+T('winD')+ls+'.';}
   var btnNext=document.getElementById('btnNext');
   if(gameMode==='pve'){ if(w===1) pveLossStreak=0; else if(w===2) pveLossStreak++; savePveProgress(); }
   if(gameMode==='pve'&&w===1&&pveLevel<3){
-    // Won this stage of the campaign -> advance to the next AI level & board
+    // Won this stage of the campaign -> unlock & offer the next AI level
+    if(pveMax<pveLevel+1) pveMax=pveLevel+1;
     pveLevel++;savePveProgress();
     btnNext.style.display='block';
     btnNext.textContent=T('btnNextLevel');
     btnNext.onclick=function(){selLv=pveLevel;startGame();};
   } else if(gameMode==='pve'&&w===1&&pveLevel>=3){
-    // Beat the Legend -> campaign complete, next run starts fresh
+    // Beat the Legend -> campaign complete; levels stay unlocked
     document.getElementById('resE').textContent='🏆';
     document.getElementById('resT').textContent=T('campaignWin');
-    pveLevel=1;savePveProgress();
+    pveChamp=true;savePveProgress();
     btnNext.style.display='block';
     btnNext.textContent=T('btnRestartCampaign');
-    btnNext.onclick=function(){selLv=1;startGame();};
+    btnNext.onclick=function(){pickLevel(1);};
   } else {
     btnNext.style.display='none';
     btnNext.onclick=null;
@@ -2212,6 +2378,7 @@ function showResult(){
   var iWon = w!==0 && (gameMode==='online' ? w===myPNum : w===1);
   if(iWon) fireConfetti(w===1?['#ff3300','#ffd700','#ff8800','#c81000','#ffee88']
                               :['#0a7a20','#3ee880','#ffd700','#22bb55','#c8ffb0']);
+  if(gameMode==='online') showRematchUI(); else hideRematchUI();
   SS('screen-result');
 }
 // ═══════════════════════
@@ -2347,18 +2514,31 @@ function getDB(){
   try{
     if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
     db=firebase.database();
+    try{ db.ref('.info/serverTimeOffset').on('value',function(s){ var v=s.val(); if(typeof v==='number') serverOffset=v; }); }catch(e){}
+    try{ db.ref('.info/connected').on('value',function(s){
+      var v=s.val();
+      if(v===false&&olReady&&G&&!G.over&&!offline){ offline=true; showToast(T('noConn'),4000); updateHUD(); }
+      else if(v===true&&offline){ offline=false; showToast(T('connBack')); updateHUD(); }
+    }); }catch(e){}
   }catch(e){db=null;}
   return db;
 }
+function serverNow(){ return Date.now()+serverOffset; }
 function genCode(){return String(Math.floor(100000+Math.random()*900000));}
 function setOS(msg,cls){var el=document.getElementById('olSt');el.textContent=msg;el.className='ol-st'+(cls?' '+cls:'');}
-function leaveRoom(){
-  olReady=false;
-  clearTurnTimer();
+function detachGameListeners(){
+  olRefs.forEach(function(r){ try{r.off();}catch(e){} }); olRefs=[];
   if(movesRef){try{movesRef.off();}catch(e){}movesRef=null;}
   if(resignRef){try{resignRef.off();}catch(e){}resignRef=null;}
+  if(olWatchId){clearInterval(olWatchId);olWatchId=null;}
+  turnInfo=null; claimSent=false;
+}
+function leaveRoom(){
+  olReady=false; offline=false;
+  clearTurnTimer();
+  detachGameListeners();
   if(roomRef){
-    try{roomRef.off();roomRef.child('guest').off();}catch(e){}
+    try{roomRef.off();roomRef.child('guest').off();roomRef.child('hostName').off();}catch(e){}
     try{
       if(isHost) roomRef.remove();                 // host leaving kills the room
       else if(roomRef) roomRef.child('guest').remove(); // guest leaving frees the seat
@@ -2393,6 +2573,9 @@ function listenMoves(){
       if(!d||d.p===myPNum) return;          // own moves are applied locally
       if(!G||G.over) return;
       if(typeof d.r!=='number'||typeof d.c!=='number') return;
+      // strict ordering: the move must be the next one in the game and made by the player to move
+      if(typeof d.seq==='number'&&d.seq!==G.moveCount) return;
+      if(d.p!==G.cur) return;
       if(!canPl(G,d.r,d.c)) return;         // ignore duplicates/replays
       var ob=G.sc.slice();
       doMove(G,d.r,d.c);draw(G);updateHUD();
@@ -2400,6 +2583,7 @@ function listenMoves(){
       if(og>0){
         playCaptureSound(og);
         spawnCaptureAnim(animCellsFromCap(G._lastCap),d.p===1?CC.p1:CC.p2);
+        if(G.stats&&og>G.stats.maxCap) G.stats.maxCap=og;
       }
       checkEarly(G);
       if(G.over){clearTurnTimer();setTimeout(showResult,600);}
@@ -2414,6 +2598,97 @@ function listenMoves(){
     }
   });
   listenResign();
+}
+// Start (or restart after a rematch) the online battle in the current room
+function startOnlineGame(){
+  detachGameListeners();
+  listenMoves();
+  listenResult();
+  listenTurn();
+  listenRematch();
+  hideRematchUI();
+  startGame();
+  if(isHost) setTurn(1);
+  olWatchId=setInterval(watchOpponentClock,1000);
+}
+function setTurn(p){
+  try{ if(roomRef) roomRef.child('turn').set({p:p,t:firebase.database.ServerValue.TIMESTAMP}); }catch(e){}
+}
+function listenTurn(){
+  if(!roomRef) return;
+  var r=roomRef.child('turn'); olRefs.push(r);
+  r.on('value',function(snap){ var d=snap.val(); turnInfo=(d&&typeof d.t==='number')?d:null; claimSent=false; },function(){});
+}
+// The waiting player watches the server clock: if the mover has vanished
+// (app in background, connection gone) long after the turn timer + grace
+// period, the waiting player claims the win. A live mover auto-moves at
+// TURN_SECS+TURN_GRACE, so this only ever fires for a dead client.
+function watchOpponentClock(){
+  if(!G||G.over||gameMode!=='online'||!turnInfo) return;
+  if(G.cur===myPNum||turnInfo.p!==G.cur) return;
+  var el=serverNow()-turnInfo.t;
+  var tt=document.getElementById('turnTimer');
+  if(el>(TURN_SECS+2)*1000){ if(tt) tt.textContent=T('oppStalled'); }
+  if(el>(TURN_SECS+TURN_GRACE+10)*1000&&!claimSent){
+    claimSent=true;
+    try{ roomRef.child('result').set({w:myPNum,reason:'timeout',t:firebase.database.ServerValue.TIMESTAMP}); }catch(e){}
+  }
+}
+function listenResult(){
+  if(!roomRef) return;
+  var r=roomRef.child('result'); olRefs.push(r);
+  r.on('value',function(snap){
+    var d=snap.val();
+    if(!d||!G||G.over) return;
+    if(d.w!==1&&d.w!==2) return;
+    clearTurnTimer();
+    G.over=true; G.earlyW=d.w; G.timeout=(d.reason==='timeout');
+    showToast(d.w===myPNum?T('oppTimeout'):T('youTimeout'));
+    setTimeout(showResult,400);
+  },function(){});
+}
+// ── Rematch: both players press the button -> host resets the room, bumps `gen`, both restart ──
+function hideRematchUI(){
+  var b=document.getElementById('btnRematch'), st=document.getElementById('rematchSt');
+  if(b){b.style.display='none';b.disabled=false;} if(st){st.style.display='none';st.textContent='';}
+}
+function showRematchUI(){
+  if(gameMode!=='online'||!roomRef||!olReady) return;
+  var b=document.getElementById('btnRematch'); if(b){b.style.display='block';b.disabled=false;b.textContent=T('btnRematch');}
+}
+function askRematch(){
+  if(!roomRef||!olReady) return;
+  var b=document.getElementById('btnRematch'), st=document.getElementById('rematchSt');
+  if(b) b.disabled=true; if(st){st.style.display='block';st.className='ol-st wdots';st.textContent=T('rematchWait');}
+  try{ roomRef.child('rematch').child('p'+myPNum).set(true); }catch(e){}
+}
+function listenRematch(){
+  if(!roomRef) return;
+  var r=roomRef.child('rematch'); olRefs.push(r);
+  r.on('value',function(snap){
+    var d=snap.val()||{}; var me='p'+myPNum, opp='p'+(3-myPNum);
+    if(d[opp]&&!d[me]&&G&&G.over){ showToast(T('rematchOffer')); }
+    if(d.p1&&d.p2&&isHost){
+      olGen++;
+      try{ roomRef.update({moves:null,resign:null,result:null,rematch:null,turn:null,gen:olGen}); }catch(e){}
+      startOnlineGame();
+    }
+  },function(){});
+  if(!isHost){
+    var g=roomRef.child('gen'); olRefs.push(g);
+    g.on('value',function(snap){
+      var v=snap.val()|0;
+      if(v!==olGen&&olReady){ olGen=v; startOnlineGame(); }
+    },function(){});
+  }
+}
+function shareRoom(){
+  var code=roomCode||document.getElementById('codeVal').textContent;
+  var base=/^https?:/.test(location.protocol)?(location.origin+location.pathname):'https://logicreate.github.io/dots-game/';
+  var url=base+'?room='+code;
+  if(navigator.share){ navigator.share({title:'DOTS WAR',text:T('shareText')+code,url:url}).catch(function(){}); return; }
+  if(navigator.clipboard) navigator.clipboard.writeText(url).then(function(){showToast(T('linkCopied'));}).catch(function(){showToast(url,5000);});
+  else showToast(url,5000);
 }
 function listenResign(){
   if(!roomRef) return;
@@ -2437,7 +2712,8 @@ function listenResign(){
 function pushMove(r,c,_retry){
   if(!movesRef) return;
   try{
-    var res=movesRef.push({p:myPNum,r:r,c:c});
+    var res=movesRef.push({p:myPNum,r:r,c:c,seq:G.moveCount-1});
+    if(!_retry) setTurn(3-myPNum);
     if(res&&typeof res.then==='function'){
       res.catch(function(err){
         console.warn('pushMove failed',err);
@@ -2473,7 +2749,7 @@ function _dc(){
   var ot=setTimeout(function(){setOS(T('netErr'),'err');document.getElementById('btnCreate').style.display='block';},15000);
   ref.transaction(function(cur){
     if(cur!==null) return;                // code already taken -> abort
-    return{fsz:olFSz,hostName:playerNames[0],created:firebase.database.ServerValue.TIMESTAMP};
+    return{fsz:olFSz,hostName:playerNames[0],gen:0,created:firebase.database.ServerValue.TIMESTAMP};
   },function(err,committed){
     clearTimeout(ot);
     if(err||!committed){
@@ -2482,7 +2758,7 @@ function _dc(){
       else{setOS(T('netErr'),'err');document.getElementById('btnCreate').style.display='block';}
       return;
     }
-    roomRef=ref;isHost=true;myPNum=1;
+    roomRef=ref;isHost=true;myPNum=1;roomCode=code;olGen=0;
     ref.onDisconnect().remove();          // auto-cleanup if host drops
     document.getElementById('codeVal').textContent=code;
     document.getElementById('codeBox').style.display='block';
@@ -2493,10 +2769,11 @@ function _dc(){
         playerNames[1]=gst.name;
         olReady=true;
         setOS(T('started'),'ok');
-        listenMoves();
-        startGame();
+        startOnlineGame();
       } else if(!gst&&olReady&&G&&!G.over){
         showToast(T('oppLeft'));setTimeout(goMenu,2200);
+      } else if(!gst&&olReady&&G&&G.over){
+        olReady=false; hideRematchUI(); showToast(T('oppLeft'));
       }
     },function(err){
       console.warn('guest listener detached',err);
@@ -2538,15 +2815,15 @@ function _join(code){
       if(!committed){setOS(T('notFound'),'err');return;}
       roomRef=ref;
       ref.child('guest').onDisconnect().remove();  // free the seat if guest drops
-      olFSz=room.fsz||1;
+      olFSz=(typeof room.fsz==='number'&&room.fsz>=0&&room.fsz<FIELD_SIZES.length)?room.fsz:1;
       playerNames[1]=myName;
       playerNames[0]=room.hostName;
-      olReady=true;
+      olReady=true; roomCode=code; olGen=room.gen|0;
       setOS(T('started'),'ok');
-      listenMoves();
-      startGame();
-      ref.on('value',function(s){          // room deleted -> host left
+      startOnlineGame();
+      ref.child('hostName').on('value',function(s){   // room deleted -> host left
         if(!s.exists()&&olReady&&G&&!G.over){showToast(T('oppLeft'));setTimeout(goMenu,2200);}
+        else if(!s.exists()&&olReady&&G&&G.over){ olReady=false; hideRematchUI(); showToast(T('oppLeft')); }
       },function(err){
         console.warn('room listener detached',err);
         if(olReady&&G&&!G.over){showToast(T('connLost'));setTimeout(goMenu,2200);}
@@ -2639,6 +2916,8 @@ window.addEventListener('orientationchange',function(){setTimeout(relayout,250);
 
 // ── INIT ──
 applyLang();
+// Invite link: ?room=123456 -> straight to the join flow
+try{ var _rm=(location.search||'').match(/[?&]room=(\d{6})/); if(_rm){ pendingRoom=_rm[1]; initMode('online'); } }catch(e){}
 // Very first visit: show "How to play" right away
 (function(){ var seen=false; try{seen=!!localStorage.getItem('dwSeen');}catch(e){} if(!seen) setTimeout(openRules,350); })();
 // PWA: offline cache + "Add to Home Screen" (needs sw.js/manifest.json next to this file; silently skipped otherwise)
