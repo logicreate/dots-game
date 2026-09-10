@@ -425,8 +425,18 @@ body{background:#050310;color:#fff;min-height:100dvh}
 @media(max-width:600px){
   #screen-game{padding:5px 5px 56px}
   .hud{padding:3px 7px;margin-bottom:4px}
-  .btn-sm{padding:5px 9px;font-size:.62rem}
-  .gfoot{margin-top:3px;gap:4px}
+  .btn-sm{padding:9px 11px;font-size:.66rem;min-height:40px}
+  .gfoot{margin-top:4px;gap:6px}
+}
+/* Touch devices: no sticky hover states after a tap */
+@media(hover:none){
+  .mcard:hover{transform:none;border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.07);box-shadow:none}
+  .mcard.onl:hover{border-color:rgba(80,180,255,.22);background:rgba(30,80,160,.18)}
+  .mcard:hover .char-img{transform:none}
+  .lv-card:hover{transform:none;border-color:rgba(180,120,30,.26)}
+  .lv-card:hover .lv-ico img{transform:none}
+  .btn:hover{transform:none;filter:none}
+  .code-box:hover{transform:none}
 }
 @media(max-height:620px) and (orientation:landscape){
   #screen-game{padding:4px 6px 54px}
@@ -454,7 +464,6 @@ body{background:#050310;color:#fff;min-height:100dvh}
 /* ══════════════════════════════════
    LOUPE / RESIGN BUTTONS
 ══════════════════════════════════ */
-.btn-loupe.on{background:#ffd94a;border-color:#c89000;color:#3a2a00;box-shadow:0 0 0 2px rgba(255,200,0,.5)}
 .btn-resign{color:#8c1400}
 .btn-resign:hover{border-color:#c82000;color:#5c0d00;background:#f4dcd4}
 </style>
@@ -560,9 +569,8 @@ body{background:#050310;color:#fff;min-height:100dvh}
   </div>
   <div class="canvas-wrap" id="cwrap"><canvas id="gameCanvas"></canvas></div>
   <div class="gfoot">
-    <button class="btn btn-sm" onclick="goMenu()" id="gMenu">🏠 Menu</button>
-    <button class="btn btn-sm" id="btnRst" onclick="restartGame()">🔄 Restart</button>
-    <button class="btn btn-sm btn-loupe" id="btnLoupe" onclick="toggleLoupe()">🔍 <span id="gLoupe">Loupe</span></button>
+    <button class="btn btn-sm" onclick="askMenu()" id="gMenu">🏠 Menu</button>
+    <button class="btn btn-sm" id="btnRst" onclick="askRestart()">🔄 Restart</button>
     <button class="btn btn-sm btn-resign" onclick="askResign()">🏳 <span id="gResign">Resign</span></button>
     <button class="btn btn-sm" onclick="openRules()" id="gRules">📜 Rules</button>
   </div>
@@ -603,6 +611,7 @@ body{background:#050310;color:#fff;min-height:100dvh}
       <li id="rl2">Closed loop around enemy dots = captured!</li>
       <li id="rl3">Connection lines appear only after an actual capture</li>
       <li id="rl4">Captured dots score points for you</li>
+      <li id="rl5">📱 Touch: press, aim (a magnifier appears), release to place</li>
     </ul>
     <h3 id="rOnline">🌐 Online</h3>
     <ul>
@@ -617,6 +626,18 @@ body{background:#050310;color:#fff;min-height:100dvh}
     </ul>
     <br>
     <button class="btn btn-gold" onclick="closeRules()" style="width:100%" id="rOkBtn">Let the battle begin! ⚔️</button>
+  </div>
+</div>
+
+<!-- GENERIC CONFIRM -->
+<div class="overlay" id="confirmModal" onclick="if(event.target===this)confirmNo()">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <h2 id="cfTitle"></h2>
+    <p id="cfText"></p>
+    <div class="row" style="margin-top:14px">
+      <button class="btn btn-red" style="flex:1" onclick="confirmYes()" id="cfYes"></button>
+      <button class="btn btn-ghost" style="flex:1" onclick="confirmNo()" id="cfNo"></button>
+    </div>
   </div>
 </div>
 
@@ -709,6 +730,7 @@ var TR = {
     rl2:'Closed loop around enemy dots = captured!',
     rl3:'Connection lines appear only after an actual capture',
     rl4:'Captured dots score points for you',
+    rl5:'📱 Touch: press, aim (a magnifier appears), release to place',
     rOnline:'🌐 Online', rol1:'Create room → share 6-digit code',
     rol2:'Friend enters code → battle begins!', rLvl:'⚔️ AI Levels',
     rlv1n:'Rookie', rlv1d:'random, great for kids',
@@ -725,6 +747,10 @@ var TR = {
     connLost:'Connection lost. Returning to menu…',
     moveFailed:'Move failed to send, retrying…',
     moveFailedFinal:'Could not send your move. Check connection.',
+    cfMenuT:'Leave the battle?', cfMenuTx:'Current progress will be lost.',
+    cfMenuTxOnl:'Leaving counts as a loss — your opponent wins.',
+    cfRestartT:'Restart the battle?', cfRestartTx:'Current progress will be lost.',
+    cfYes:'Yes', cfNo:'Cancel',
     fieldSizes:['10×10','15×15','20×20','25×25','30×30'],
   },
   ru:{
@@ -768,6 +794,7 @@ var TR = {
     rl2:'Замкнутый контур вокруг вражеских точек = захват!',
     rl3:'Линии между точками появляются только после реального захвата',
     rl4:'Захваченные точки приносят очки',
+    rl5:'📱 На телефоне: нажмите, прицельтесь (появится лупа), отпустите — точка поставлена',
     rOnline:'🌐 Онлайн', rol1:'Создайте комнату → поделитесь 6-значным кодом',
     rol2:'Друг вводит код → битва начинается!', rLvl:'⚔️ Уровни ИИ',
     rlv1n:'Новичок', rlv1d:'случайные ходы, для детей',
@@ -784,6 +811,10 @@ var TR = {
     connLost:'Соединение потеряно. Возврат в меню…',
     moveFailed:'Ход не отправился, повтор…',
     moveFailedFinal:'Не удалось отправить ход. Проверьте соединение.',
+    cfMenuT:'Выйти из битвы?', cfMenuTx:'Текущий прогресс будет потерян.',
+    cfMenuTxOnl:'Выход засчитается как поражение — победит соперник.',
+    cfRestartT:'Начать заново?', cfRestartTx:'Текущий прогресс будет потерян.',
+    cfYes:'Да', cfNo:'Отмена',
     fieldSizes:['10×10','15×15','20×20','25×25','30×30'],
   }
 };
@@ -794,10 +825,10 @@ var TEXT_IDS = ['mPveT','mPveS','mPvpT','mPvpS','mOnT','mOnS',
   'btnStart','nameTitle','nameSub','lbl1','lbl2','ne1','ne2','btnCont',
   'olTitle','olSub','tCreate','tJoin','fldSizeLbl','codeLbl','codeHint',
   'enterCodeLbl','btnJoin','btnBackOl','rulesH','rGoal','rGoalT','rHow',
-  'rl1','rl2','rl3','rl4','rOnline','rol1','rol2','rLvl',
+  'rl1','rl2','rl3','rl4','rl5','rOnline','rol1','rol2','rLvl',
   'rlv1n','rlv1d','rlv2n','rlv2d','rlv3n','rlv3d','rOkBtn',
   'gMenu','gRules','rPlayAgain','rMenu','copyR',
-  'gLoupe','gResign','resignTitle','resignText','resignYesBtn','resignNoBtn'];
+  'gResign','resignTitle','resignText','resignYesBtn','resignNoBtn'];
 
 function applyLang(){
   // Language button: highlight active language
@@ -840,7 +871,11 @@ var G=null, gameMode='pve', selLv=1, olFSz=1;
 var aiTimer=null, aiLock=false;
 var playerNames=['Red Dots','Green Pix'];
 var db=null, roomRef=null, movesRef=null, resignRef=null, myPNum=1, isHost=false, olReady=false;
-var loupeOn=false, loupeDrag=false, loupeX=0, loupeY=0;
+// Press-to-aim input: pointer down shows a preview, holding/moving shows a
+// magnifier, releasing places the dot. Works the same for touch and mouse.
+var pressActive=false, pressTimer=null, pressX=0, pressY=0, loupeShow=false, loupeX=0, loupeY=0;
+var HOLD_MS=300, PRESS_SLOP=6;
+var curScreen='screen-menu', _cfCb=null;
 var turnTimerId=null, turnGraceId=null, TURN_SECS=15, TURN_GRACE=5;
 
 // PvE campaign progress: 1=Rookie(small board), 2=Warrior(medium), 3=Legend(large)
@@ -1384,7 +1419,7 @@ function draw(g){
     ctx.strokeStyle=col+'55';ctx.lineWidth=1;
     ctx.setLineDash([2,2]);ctx.stroke();ctx.setLineDash([]);
   }
-  if(loupeOn&&loupeDrag&&hR>=0&&hC>=0){
+  if(loupeShow&&pressActive&&hR>=0&&hC>=0){
     drawLoupe(g);
   }
 }
@@ -1429,11 +1464,53 @@ function drawLoupe(g){
 // ═══════════════════════
 //  UI / SCREENS
 // ═══════════════════════
-function SS(id){
+function SS(id,fromPop){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
+  var prev=curScreen; curScreen=id;
+  // Browser/phone Back button support: exactly one extra history entry
+  // while away from the menu, so Back always returns to the main menu.
+  if(!fromPop){
+    try{
+      if(id==='screen-menu') history.replaceState({s:id},'');
+      else if(prev==='screen-menu') history.pushState({s:id},'');
+      else history.replaceState({s:id},'');
+    }catch(e){}
+  }
 }
-function goMenu(){leaveRoom();SS('screen-menu');}
+function goMenu(fromPop){leaveRoom();SS('screen-menu',fromPop);}
+function closeAllModals(){
+  document.querySelectorAll('.overlay.open').forEach(function(o){o.classList.remove('open');});
+  _cfCb=null;
+}
+function askConfirm(titleK,textK,yesK,cb){
+  document.getElementById('cfTitle').textContent=T(titleK);
+  document.getElementById('cfText').textContent=T(textK);
+  document.getElementById('cfYes').textContent=T(yesK);
+  document.getElementById('cfNo').textContent=T('cfNo');
+  _cfCb=cb;
+  document.getElementById('confirmModal').classList.add('open');
+}
+function confirmYes(){
+  document.getElementById('confirmModal').classList.remove('open');
+  var cb=_cfCb; _cfCb=null; if(cb) cb();
+}
+function confirmNo(){
+  document.getElementById('confirmModal').classList.remove('open');
+  _cfCb=null;
+}
+function gameInProgress(){
+  return curScreen==='screen-game' && !!G && !G.over && !!G.last;
+}
+function askMenu(){
+  if(gameInProgress()) askConfirm('cfMenuT', gameMode==='online'?'cfMenuTxOnl':'cfMenuTx', 'cfYes', function(){goMenu();});
+  else goMenu();
+}
+function askRestart(){
+  if(gameMode==='online') return;
+  if(gameInProgress()) askConfirm('cfRestartT','cfRestartTx','cfYes',restartGame);
+  else restartGame();
+}
 function initMode(mode){
   gameMode=mode;
   if(mode==='pve'){
@@ -1459,7 +1536,7 @@ function startGame(){
   if(gameMode==='online'&&!olReady) return;
   if(aiTimer){clearTimeout(aiTimer);aiTimer=null;}
   aiLock=false;hR=-1;hC=-1;activeAnims=[];
-  clearTurnTimer();loupeDrag=false;
+  clearTurnTimer();pressActive=false;loupeShow=false;if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
   var n;
   if(gameMode==='pve'){
     n=selLv===1?11:selLv===2?16:21;
@@ -1527,17 +1604,6 @@ function schedAI(){
     else if(G.cur===2) schedAI();
   },delay);
 }
-function onCvClick(e){
-  if(!G||G.over) return;
-  if(loupeOn) return; // loupe mode places on drag-release, not a plain tap
-  if(gameMode==='pve'&&(aiLock||G.cur===2)) return;
-  if(gameMode==='online'&&G.cur!==myPNum) return;
-  var rect=canvas.getBoundingClientRect();
-  var sx=VW/rect.width,sy=VH/rect.height;
-  var rc=x2n((e.clientX-rect.left)*sx,(e.clientY-rect.top)*sy);
-  if(!canPl(G,rc[0],rc[1])) return;
-  commitMove(rc[0],rc[1]);
-}
 function commitMove(r,c){
   var before=G.sc.slice();
   doMove(G,r,c);
@@ -1598,42 +1664,56 @@ function autoPlayRandomMove(){
   commitMove(mv[0],mv[1]);
 }
 // ═══════════════════════
-//  LOUPE — magnifier for precise placement on big boards.
-//  Toggle on, then press-and-drag on the board: a zoomed lens
-//  follows your finger showing exactly where the dot will land;
-//  lifting your finger/mouse commits the move.
+//  INPUT — press to aim, release to place (touch + mouse).
+//  A magnifier appears after a short hold or as soon as the finger moves,
+//  showing exactly where the dot will land. Dragging off the board cancels.
 // ═══════════════════════
-function toggleLoupe(){
-  loupeOn=!loupeOn;
-  loupeDrag=false;
-  var b=document.getElementById('btnLoupe'); if(b) b.classList.toggle('on',loupeOn);
-  if(G) draw(G);
+function canLocalMove(){
+  if(!G||G.over) return false;
+  if(gameMode==='pve'&&(aiLock||G.cur===2)) return false;
+  if(gameMode==='online'&&G.cur!==myPNum) return false;
+  return true;
 }
-function updateLoupePos(e){
+function ptrPos(e){
   var rect=canvas.getBoundingClientRect();
-  var sx=VW/rect.width, sy=VH/rect.height;
-  loupeX=(e.clientX-rect.left)*sx; loupeY=(e.clientY-rect.top)*sy;
-  var rc=x2n(loupeX,loupeY);
-  hR=rc[0]; hC=rc[1];
+  return {x:(e.clientX-rect.left)*VW/rect.width, y:(e.clientY-rect.top)*VH/rect.height};
 }
-function loupePointerDown(e){
+function setAim(x,y){
+  var rc=x2n(x,y); hR=rc[0]; hC=rc[1]; loupeX=x; loupeY=y;
+}
+function pressStart(e){
+  if(!canLocalMove()) return;
+  var p=ptrPos(e);
+  pressActive=true; loupeShow=false; pressX=p.x; pressY=p.y;
+  setAim(p.x,p.y); draw(G);
+  if(pressTimer) clearTimeout(pressTimer);
+  pressTimer=setTimeout(function(){ pressTimer=null; if(pressActive){loupeShow=true; if(G) draw(G);} },HOLD_MS);
+}
+function pressMove(e){
   if(!G||G.over) return;
-  if(gameMode==='pve'&&(aiLock||G.cur===2)) return;
-  if(gameMode==='online'&&G.cur!==myPNum) return;
-  loupeDrag=true;
-  updateLoupePos(e);
-  draw(G);
+  var p=ptrPos(e);
+  if(!pressActive){
+    // plain hover (mouse): ghost preview only
+    if(!canLocalMove()) return;
+    var rc=x2n(p.x,p.y);
+    if(rc[0]===hR&&rc[1]===hC) return;
+    setAim(p.x,p.y); draw(G); return;
+  }
+  if(!loupeShow&&Math.hypot(p.x-pressX,p.y-pressY)>PRESS_SLOP){
+    loupeShow=true;
+    if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
+  }
+  setAim(p.x,p.y); draw(G);
 }
-function loupePointerMove(e){
-  if(!loupeDrag) return;
-  updateLoupePos(e);
-  draw(G);
-}
-function loupePointerUp(){
-  if(!loupeDrag) return;
-  loupeDrag=false;
-  if(G&&!G.over&&hR>=0&&hC>=0&&canPl(G,hR,hC)) commitMove(hR,hC);
+function pressEnd(cancel){
+  if(!pressActive) return;
+  pressActive=false; loupeShow=false;
+  if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
+  if(!cancel&&canLocalMove()&&hR>=0&&hC>=0&&canPl(G,hR,hC)) commitMove(hR,hC);
   else if(G) draw(G);
+}
+function clearAim(){
+  hR=-1;hC=-1; if(G) draw(G);
 }
 // ═══════════════════════
 //  RESIGN
@@ -1653,16 +1733,6 @@ function confirmResign(){
     try{ if(roomRef) roomRef.child('resign').set({p:loser,t:firebase.database.ServerValue.TIMESTAMP}); }catch(e){}
   }
   setTimeout(showResult,200);
-}
-function onCvMove(e){
-  if(!G||G.over) return;
-  if(gameMode==='pve'&&G.cur===2) return;
-  if(gameMode==='online'&&G.cur!==myPNum) return;
-  var rect=canvas.getBoundingClientRect();
-  var sx=VW/rect.width,sy=VH/rect.height;
-  var rc=x2n((e.clientX-rect.left)*sx,(e.clientY-rect.top)*sy);
-  if(rc[0]===hR&&rc[1]===hC) return;
-  hR=rc[0];hC=rc[1];draw(G);
 }
 function showResult(){
   var s1=G.sc[0],s2=G.sc[1],w=G.earlyW||(s1>s2?1:s2>s1?2:0);
@@ -1967,28 +2037,28 @@ function joinRoom(){
 //  EVENTS
 // ═══════════════════════
 var cv=document.getElementById('gameCanvas');
-cv.addEventListener('click',function(e){ if(!loupeOn) onCvClick(e); });
-cv.addEventListener('mousedown',function(e){ if(loupeOn) loupePointerDown(e); });
-cv.addEventListener('mouseup',function(e){ if(loupeOn) loupePointerUp(); });
-cv.addEventListener('mousemove',function(e){ if(loupeOn&&loupeDrag) loupePointerMove(e); else onCvMove(e); });
-cv.addEventListener('mouseleave',function(){ if(loupeOn&&loupeDrag) loupePointerUp(); hR=-1;hC=-1;if(G)draw(G); });
+cv.addEventListener('mousedown',function(e){ if(e.button===0) pressStart(e); });
+cv.addEventListener('mousemove',function(e){ pressMove(e); });
+cv.addEventListener('mouseup',function(e){ if(e.button===0) pressEnd(false); });
+cv.addEventListener('mouseleave',function(){ if(pressActive) pressEnd(true); clearAim(); });
 cv.addEventListener('touchstart',function(e){
   e.preventDefault();
-  var t=e.touches[0],ev={clientX:t.clientX,clientY:t.clientY};
-  if(loupeOn) loupePointerDown(ev); else onCvClick(ev);
+  if(e.touches.length>1){ pressEnd(true); return; }   // second finger = cancel
+  var t=e.touches[0]; pressStart({clientX:t.clientX,clientY:t.clientY});
 },{passive:false});
 cv.addEventListener('touchmove',function(e){
   e.preventDefault();
-  var t=e.touches[0],ev={clientX:t.clientX,clientY:t.clientY};
-  if(loupeOn&&loupeDrag) loupePointerMove(ev); else onCvMove(ev);
+  if(!pressActive) return;
+  var t=e.touches[0]; pressMove({clientX:t.clientX,clientY:t.clientY});
 },{passive:false});
 cv.addEventListener('touchend',function(e){
   e.preventDefault();
-  if(loupeOn) loupePointerUp();
+  if(e.touches.length===0) pressEnd(false);
 },{passive:false});
+cv.addEventListener('touchcancel',function(e){ pressEnd(true); },{passive:false});
 document.addEventListener('keydown',function(e){
-  if(e.key==='Escape') closeRules();
-  if(e.key==='r'&&gameMode!=='online'&&document.getElementById('screen-game').classList.contains('active')) restartGame();
+  if(e.key==='Escape') closeAllModals();
+  if(e.key==='r'&&gameMode!=='online'&&document.getElementById('screen-game').classList.contains('active')&&!document.querySelector('.overlay.open')) askRestart();
   if(e.key==='Enter'&&document.getElementById('screen-name').classList.contains('active')) confirmNames();
 });
 function relayout(){
@@ -1997,6 +2067,23 @@ function relayout(){
   }
 }
 window.addEventListener('resize',relayout);
+// Back button (browser / Android hardware back): close a dialog first,
+// ask before abandoning a live battle, otherwise return to the menu.
+window.addEventListener('popstate',function(){
+  if(document.querySelector('.overlay.open')){
+    closeAllModals();
+    try{history.pushState({s:curScreen},'');}catch(e){}
+    return;
+  }
+  if(curScreen==='screen-menu') return;
+  if(gameInProgress()){
+    try{history.pushState({s:curScreen},'');}catch(e){}
+    askMenu();
+    return;
+  }
+  goMenu(true);
+});
+try{history.replaceState({s:'screen-menu'},'');}catch(e){}
 window.addEventListener('orientationchange',function(){setTimeout(relayout,250);});
 
 // ── INIT ──
