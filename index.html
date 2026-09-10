@@ -1042,21 +1042,45 @@ function cloneG(g){
     board:g.board.map(function(r){return r.slice();}),
     cur:g.cur,sc:g.sc.slice(),over:g.over,last:g.last,earlyW:0};
 }
-function checkEarly(g){
-  if(g.over) return;
-  // If the trailing player cannot catch up even in the best possible case
-  // (capturing every remaining empty cell AND every one of the opponent's
-  // live dots), the result is already decided -> end the battle now.
-  var s1=g.sc[0],s2=g.sc[1],b=g.board,n=g.n,l1=0,l2=0,e=0;
+// ── Early finish ──
+// The battle ends as soon as the trailing player can no longer catch up even
+// with perfect play. For player p we bound the best result still reachable:
+//   * enemy dots that are already unreachable for p's walls can never be
+//     captured: a dot is safe when it is 4-connected to the board edge through
+//     cells p can never build on (enemy dots, enemy territory, dead dots);
+//   * empty cells only matter if the enemy could still put a dot there AND
+//     that dot could be enclosed (not on the edge, not next to a safe region),
+//     and the enemy gets at most half of the remaining moves;
+//   * p may also free its own dead dots (revive), lowering the enemy score.
+function reachBound(g,p){
+  var o=3-p,n=g.n,b=g.board;
+  var oLive=o===1?P1:P2, oT=o===1?T1:T2, oCap=o===1?C1:C2;
+  function inS(v){ return v===oLive||v===oT||v===C1||v===C2; }
+  var R=Array.from({length:n},function(){return new Uint8Array(n);}), q=[];
+  function seed(r,c){ if(!R[r][c]&&inS(b[r][c])){R[r][c]=1;q.push(r*n+c);} }
+  for(var i=0;i<n;i++){seed(0,i);seed(n-1,i);seed(i,0);seed(i,n-1);}
+  while(q.length){ var x=q.pop(),r=(x/n)|0,c=x-r*n;
+    if(r>0)seed(r-1,c); if(r<n-1)seed(r+1,c); if(c>0)seed(r,c-1); if(c<n-1)seed(r,c+1); }
+  var sP=g.sc[p-1], sO=g.sc[o-1], lCap=0, cRev=0, e=0, eCap=0;
   for(var r=0;r<n;r++) for(var c=0;c<n;c++){
     var v=b[r][c];
-    if(v===P1) l1++;
-    else if(v===P2) l2++;
-    else if(v===EMPTY) e++;
+    if(v===oLive){ if(!R[r][c]) lCap++; }
+    else if(v===oCap){ if(!R[r][c]) cRev++; }
+    else if(v===EMPTY){
+      e++;
+      var border=r===0||c===0||r===n-1||c===n-1;
+      var adjR=(r>0&&R[r-1][c])||(r<n-1&&R[r+1][c])||(c>0&&R[r][c-1])||(c<n-1&&R[r][c+1]);
+      if(!border&&!adjR) eCap++;
+    }
   }
-  var max1=s1+e+l2, max2=s2+e+l1;
-  if(s1>s2&&max2<=s1){g.over=true;g.earlyW=1;}
-  else if(s2>s1&&max1<=s2){g.over=true;g.earlyW=2;}
+  var oMoves = g.cur===o ? Math.ceil(e/2) : Math.floor(e/2);
+  return {maxP:sP+lCap+Math.min(eCap,oMoves), minO:sO-cRev};
+}
+function checkEarly(g){
+  if(g.over) return;
+  var s1=g.sc[0],s2=g.sc[1];
+  if(s2>s1){ var b1=reachBound(g,1); if(b1.maxP<b1.minO){g.over=true;g.earlyW=2;} }
+  else if(s1>s2){ var b2=reachBound(g,2); if(b2.maxP<b2.minO){g.over=true;g.earlyW=1;} }
 }
 
 // ═══════════════════════
@@ -1331,12 +1355,38 @@ function DotsAI(){
     return best;
   }
 
-  // Early-win test identical to the game's checkEarly()
+  // Early-win test identical to the game's checkEarly() (flat board)
+  var Rbuf=null;
+  function reachBound(st,p){
+    var o=3-p,b=st.b,n=N;
+    var oLive=o, oT=o===1?T1:T2, oCap=o===1?C1:C2;
+    if(!Rbuf||Rbuf.length!==NN) Rbuf=new Uint8Array(NN);
+    var R=Rbuf; R.fill(0); var q=[];
+    function inS(v){ return v===oLive||v===oT||v===C1||v===C2; }
+    function seed(i){ if(!R[i]&&inS(b[i])){R[i]=1;q.push(i);} }
+    for(var i=0;i<n;i++){seed(i);seed(NN-n+i);seed(i*n);seed(i*n+n-1);}
+    while(q.length){ var x=q.pop(),r=(x/n)|0,c=x-r*n;
+      if(r>0)seed(x-n); if(r<n-1)seed(x+n); if(c>0)seed(x-1); if(c<n-1)seed(x+1); }
+    var sP=st.sc[p-1], sO=st.sc[o-1], lCap=0, cRev=0, e=0, eCap=0;
+    for(var k=0;k<NN;k++){
+      var v=b[k];
+      if(v===oLive){ if(!R[k]) lCap++; }
+      else if(v===oCap){ if(!R[k]) cRev++; }
+      else if(v===EMPTY){
+        e++;
+        var r2=(k/n)|0,c2=k-r2*n;
+        var border=r2===0||c2===0||r2===n-1||c2===n-1;
+        var adjR=(r2>0&&R[k-n])||(r2<n-1&&R[k+n])||(c2>0&&R[k-1])||(c2<n-1&&R[k+1]);
+        if(!border&&!adjR) eCap++;
+      }
+    }
+    var oMoves = st.cur===o ? Math.ceil(e/2) : Math.floor(e/2);
+    return {maxP:sP+lCap+Math.min(eCap,oMoves), minO:sO-cRev};
+  }
   function decided(st){
-    var b=st.b,s1=st.sc[0],s2=st.sc[1],l1=0,l2=0,e=0;
-    for(var i=0;i<NN;i++){ var v=b[i]; if(v===P1)l1++; else if(v===P2)l2++; else if(v===EMPTY)e++; }
-    if(s1>s2&&s2+e+l1<=s1) return 1;
-    if(s2>s1&&s1+e+l2<=s2) return 2;
+    var s1=st.sc[0],s2=st.sc[1];
+    if(s2>s1){ var b1=reachBound(st,1); if(b1.maxP<b1.minO) return 2; }
+    else if(s1>s2){ var b2=reachBound(st,2); if(b2.maxP<b2.minO) return 1; }
     return 0;
   }
 
