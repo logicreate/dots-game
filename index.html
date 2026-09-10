@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#050310">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DOTS WAR">
+<link rel="manifest" href="manifest.json">
 <title>DOTS WAR</title>
 
 <!-- ═══ ССЫЛКА-ПРЕВЬЮ И ИКОНКА ═══
@@ -21,7 +27,7 @@
 <meta name="twitter:description" content="Захватывай территорию точками! Против ИИ, вдвоём или онлайн.">
 <meta name="twitter:image" content="https://logicreate.github.io/dots-game/preview.png">
 <link rel="icon" type="image/png" href="favicon.png">
-<link rel="apple-touch-icon" href="favicon.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <style>
@@ -34,7 +40,7 @@ body{background:#050310;color:#fff;min-height:100dvh}
 .screen{display:none;flex-direction:column;align-items:center;justify-content:center;
   width:100vw;height:100dvh;position:fixed;inset:0;z-index:1;padding:0;overflow:hidden}
 .screen.active{display:flex}
-.iscr{overflow-y:auto;padding:14px 12px 56px}
+.iscr{overflow-y:auto;padding:calc(14px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(56px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px))}
 
 /* ══════════════════════════════════
    MAIN MENU
@@ -82,7 +88,7 @@ body{background:#050310;color:#fff;min-height:100dvh}
 .modes-section{
   position:absolute;left:50%;bottom:0;transform:translateX(-50%);
   width:100%;max-width:600px;
-  padding-bottom:clamp(46px,8vh,64px)
+  padding-bottom:calc(clamp(46px,8vh,64px) + env(safe-area-inset-bottom,0px))
 }
 /* Single row of 3 cards */
 .mode-row{
@@ -139,7 +145,7 @@ body{background:#050310;color:#fff;min-height:100dvh}
   color:rgba(255,255,255,.38);
   line-height:1.3;font-weight:400
 }
-.menu-rules{position:absolute;top:10px;left:10px;z-index:5}
+.menu-rules{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));z-index:5}
 
 /* ══════════════════════════════════
    SHARED BUTTONS
@@ -260,19 +266,26 @@ body{background:#050310;color:#fff;min-height:100dvh}
    GAME SCREEN — paper board
 ══════════════════════════════════ */
 #screen-game{
-  flex-direction:column;
-  justify-content:flex-start;
-  align-items:center;
-  padding:6px 6px 58px;
-  gap:0;
+  padding:calc(6px + env(safe-area-inset-top,0px)) calc(6px + env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) calc(6px + env(safe-area-inset-left,0px));
   background:#e8e4d8
 }
+/* Portrait / narrow: HUD on top, board in the middle, buttons below */
+#screen-game.active{
+  display:grid;
+  grid-template-columns:100%;
+  grid-template-rows:auto minmax(0,1fr) auto;
+  justify-items:center;align-items:center;
+  row-gap:5px
+}
+.hud{grid-row:1}
+.canvas-wrap{grid-row:2}
+.gfoot{grid-row:3}
 .hud{
   display:flex;align-items:center;justify-content:space-between;
   width:100%;max-width:960px;
   padding:4px 9px;
   background:#f5f1e6;border:1.5px solid #b8b09a;
-  border-radius:11px;flex-shrink:0;margin-bottom:5px;
+  border-radius:11px;flex-shrink:0;
   box-shadow:0 1px 4px rgba(0,0,0,.12)
 }
 .phud{display:flex;align-items:center;gap:7px;padding:4px 7px;border-radius:11px;transition:all .28s;flex:1;min-width:0}
@@ -305,11 +318,45 @@ body{background:#050310;color:#fff;min-height:100dvh}
 .hud-mid{text-align:center;flex:1;min-width:0;padding:0 3px}
 .turn-t{font-size:clamp(.52rem,1.6vw,.74rem);color:#3a3020;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400}
-.canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;
-  width:100%;min-height:0;overflow:hidden}
+.canvas-wrap{display:flex;align-items:center;justify-content:center;
+  width:100%;height:100%;min-width:0;min-height:0;overflow:hidden}
 #gameCanvas{display:block;touch-action:none;border-radius:8px;
   box-shadow:0 0 0 1.5px rgba(180,120,30,.28),0 10px 32px rgba(0,0,0,.55)}
-.gfoot{display:flex;gap:5px;margin-top:4px;flex-shrink:0;flex-wrap:wrap;justify-content:center}
+.gfoot{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:center}
+.zoom-btn{min-width:38px;font-size:.9rem!important;line-height:1}
+.zoom-row{display:contents}
+/* Landscape / desktop: side panel (players + buttons) on the left, board fills the rest */
+@media(orientation:landscape) and (min-width:600px){
+  #screen-game.active{
+    grid-template-columns:clamp(150px,22vw,240px) minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr);
+    column-gap:8px;row-gap:8px;align-items:start
+  }
+  .hud{grid-column:1;grid-row:1;flex-direction:column;gap:6px;padding:8px 6px;
+    width:100%!important;max-width:none!important}
+  .phud,.phud-r{flex-direction:column;width:100%;gap:3px;padding:6px 4px}
+  .phud-info,.phud-r .phud-info{text-align:center!important}
+  .phud-nm{max-width:100%}
+  .hud-mid{padding:4px 0}
+  .canvas-wrap{grid-column:2;grid-row:1/3;height:100%}
+  .gfoot{grid-column:1;grid-row:2;display:grid;grid-template-columns:1fr 1fr;align-self:start;width:100%;gap:6px}
+  .gfoot .btn-sm{width:100%;min-height:36px}
+  .gfoot .zoom-row{display:contents}
+}
+/* Short landscape screens (phones): compact side panel */
+@media(orientation:landscape) and (min-width:600px) and (max-height:520px){
+  .hud{padding:4px;gap:3px}
+  .phud,.phud-r{flex-direction:row;gap:5px;padding:3px 4px}
+  .phud-r{flex-direction:row-reverse}
+  .p-avatar{width:28px!important;height:28px!important}
+  .phud-sc{font-size:1.05rem}
+  .phud-nm{font-size:.5rem}
+  .phud-info{text-align:left!important}
+  .phud-r .phud-info{text-align:right!important}
+  .hud-mid{padding:2px 0}
+  .gfoot{gap:4px}
+  .gfoot .btn-sm{min-height:30px;padding:3px 6px;font-size:.58rem}
+}
 
 /* ══════════════════════════════════
    RESULT
@@ -365,7 +412,7 @@ body{background:#050310;color:#fff;min-height:100dvh}
 
 /* LANG BTN */
 #langBtn{
-  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:500;
+  position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:500;
   background:rgba(20,15,45,.85);
   border:1.5px solid rgba(255,255,255,.16);
   border-radius:12px;padding:4px 9px;cursor:pointer;
@@ -374,6 +421,7 @@ body{background:#050310;color:#fff;min-height:100dvh}
   display:inline-flex;align-items:center;gap:5px;
   transition:all .2s
 }
+body.in-game #langBtn,body.in-game #copyR{display:none}
 #langBtn:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.13);color:#fff}
 #langBtn .lb-icon{font-size:.88rem}
 #langBtn .lb-sep{color:rgba(180,160,255,.3);font-weight:400}
@@ -381,7 +429,7 @@ body{background:#050310;color:#fff;min-height:100dvh}
 #langBtn .lb-opt.active{background:rgba(160,140,255,.25);color:#fff;font-weight:400}
 
 /* COPYRIGHT */
-#copyR{position:fixed;bottom:3px;left:50%;transform:translateX(-50%);
+#copyR{position:fixed;bottom:calc(3px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);
   z-index:400;font-size:.55rem;color:rgba(255,255,255,.28);
   letter-spacing:.06em;pointer-events:none;white-space:nowrap}
 
@@ -423,8 +471,8 @@ body{background:#050310;color:#fff;min-height:100dvh}
 }
 /* Game screen mobile */
 @media(max-width:600px){
-  #screen-game{padding:5px 5px 56px}
-  .hud{padding:3px 7px;margin-bottom:4px}
+  #screen-game{padding:calc(5px + env(safe-area-inset-top,0px)) calc(5px + env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) calc(5px + env(safe-area-inset-left,0px))}
+  .hud{padding:3px 7px}
   .btn-sm{padding:9px 11px;font-size:.66rem;min-height:40px}
   .gfoot{margin-top:4px;gap:6px}
 }
@@ -439,10 +487,10 @@ body{background:#050310;color:#fff;min-height:100dvh}
   .code-box:hover{transform:none}
 }
 @media(max-height:620px) and (orientation:landscape){
-  #screen-game{padding:4px 6px 54px}
-  .hud{padding:3px 8px;margin-bottom:3px}
-  .gfoot{margin-top:3px;gap:4px}
-  .btn-sm{padding:4px 8px}
+  #screen-game{padding:calc(4px + env(safe-area-inset-top,0px)) calc(6px + env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom,0px)) calc(6px + env(safe-area-inset-left,0px))}
+  .hud{padding:3px 8px}
+  .gfoot{gap:4px}
+  .btn-sm{padding:4px 8px;min-height:32px}
 }
 /* ══════════════════════════════════
    TURN TIMER + EDGE BLINK
@@ -573,6 +621,10 @@ body{background:#050310;color:#fff;min-height:100dvh}
     <button class="btn btn-sm" id="btnRst" onclick="askRestart()">🔄 Restart</button>
     <button class="btn btn-sm btn-resign" onclick="askResign()">🏳 <span id="gResign">Resign</span></button>
     <button class="btn btn-sm" onclick="openRules()" id="gRules">📜 Rules</button>
+    <div class="zoom-row">
+      <button class="btn btn-sm zoom-btn" onclick="zoomBy(1/1.3)" id="zoomOut" title="Zoom out">−</button>
+      <button class="btn btn-sm zoom-btn" onclick="zoomBy(1.3)" id="zoomIn" title="Zoom in">+</button>
+    </div>
   </div>
 </div>
 
@@ -611,7 +663,7 @@ body{background:#050310;color:#fff;min-height:100dvh}
       <li id="rl2">Closed loop around enemy dots = captured!</li>
       <li id="rl3">Connection lines appear only after an actual capture</li>
       <li id="rl4">Captured dots score points for you</li>
-      <li id="rl5">📱 Touch: press, aim (a magnifier appears), release to place</li>
+      <li id="rl5">📱 Touch: press, aim (a magnifier appears), release to place. Two fingers: move &amp; zoom the board</li>
     </ul>
     <h3 id="rOnline">🌐 Online</h3>
     <ul>
@@ -730,7 +782,7 @@ var TR = {
     rl2:'Closed loop around enemy dots = captured!',
     rl3:'Connection lines appear only after an actual capture',
     rl4:'Captured dots score points for you',
-    rl5:'📱 Touch: press, aim (a magnifier appears), release to place',
+    rl5:'📱 Touch: press, aim (a magnifier appears), release to place. Two fingers: move & zoom the board',
     rOnline:'🌐 Online', rol1:'Create room → share 6-digit code',
     rol2:'Friend enters code → battle begins!', rLvl:'⚔️ AI Levels',
     rlv1n:'Rookie', rlv1d:'random, great for kids',
@@ -794,7 +846,7 @@ var TR = {
     rl2:'Замкнутый контур вокруг вражеских точек = захват!',
     rl3:'Линии между точками появляются только после реального захвата',
     rl4:'Захваченные точки приносят очки',
-    rl5:'📱 На телефоне: нажмите, прицельтесь (появится лупа), отпустите — точка поставлена',
+    rl5:'📱 На телефоне: нажмите, прицельтесь (появится лупа), отпустите — точка поставлена. Двумя пальцами: двигать и масштабировать поле',
     rOnline:'🌐 Онлайн', rol1:'Создайте комнату → поделитесь 6-значным кодом',
     rol2:'Друг вводит код → битва начинается!', rLvl:'⚔️ Уровни ИИ',
     rlv1n:'Новичок', rlv1d:'случайные ходы, для детей',
@@ -1236,44 +1288,90 @@ function spawnCaptureAnim(cells,color){
     animRAF=requestAnimationFrame(tick);
   }
 }
+// Canvas = a viewport (VW×VH) onto the board (BW×BH). When the board is
+// larger than the space available it can be panned (panX/panY) and zoomed
+// (CS = cell size). Cells never get smaller than CS_FIT (whole board visible)
+// and start at a comfortable finger-sized minimum on touch screens.
 var canvas=null,ctx=null,CS=24,PAD=16,hR=-1,hC=-1,VW=0,VH=0;
-
-function initCanvas(g){
+var BW=0,BH=0,panX=0,panY=0,CS_FIT=24,CS_MAX=64;
+function isSideLayout(){
+  try{ return window.matchMedia('(orientation:landscape) and (min-width:600px)').matches; }catch(e){ return false; }
+}
+function isCoarsePointer(){
+  try{ return window.matchMedia('(pointer:coarse)').matches; }catch(e){ return false; }
+}
+function wrapSize(){
+  var wrap=document.getElementById('cwrap');
+  var w=(wrap&&wrap.clientWidth)||window.innerWidth, h=(wrap&&wrap.clientHeight)||window.innerHeight;
+  return {w:Math.max(120,w-4), h:Math.max(120,h-4)};
+}
+function boardDims(){ BW=(G.n-1)*CS+2*PAD; BH=BW; }
+function clampPan(){
+  panX=Math.min(Math.max(panX,0),Math.max(0,BW-VW));
+  panY=Math.min(Math.max(panY,0),Math.max(0,BH-VH));
+}
+function applyCanvasSize(){
+  var sz=wrapSize();
+  VW=Math.min(sz.w,BW); VH=Math.min(sz.h,BH);
+  clampPan();
+  var dpr=Math.min(window.devicePixelRatio||1,2.5);
+  var pw=Math.round(VW*dpr), ph=Math.round(VH*dpr);
+  if(canvas.width!==pw) canvas.width=pw;
+  if(canvas.height!==ph) canvas.height=ph;
+  canvas.style.width=VW+'px'; canvas.style.height=VH+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  // Portrait: the top bar matches the visible battlefield width
+  var hud=document.querySelector('.hud');
+  if(hud){
+    if(isSideLayout()){ hud.style.width=''; hud.style.maxWidth=''; }
+    else { var hw=Math.max(VW,260)+'px'; hud.style.width=hw; hud.style.maxWidth=hw; }
+  }
+  var zi=document.getElementById('zoomIn'), zo=document.getElementById('zoomOut');
+  if(zi) zi.disabled = CS>=Math.max(CS_FIT,CS_MAX);
+  if(zo) zo.disabled = CS<=CS_FIT;
+}
+function initCanvas(g,keep){
   canvas=document.getElementById('gameCanvas');
   ctx=canvas.getContext('2d');
-  // Measure live DOM to get exact available space
-  var hud  = document.querySelector('.hud');
-  var foot = document.querySelector('.gfoot');
-  var scr  = document.getElementById('screen-game');
-  var scrH = scr.clientHeight||window.innerHeight;
-  var scrW = scr.clientWidth||window.innerWidth;
-  var hudH = (hud ?hud.offsetHeight :46)+5;
-  var fooH = (foot?foot.offsetHeight:34)+4;
-  var padV = 64; // top+bottom padding of #screen-game (6+58)
-  var availH = scrH - hudH - fooH - padV;
-  var availW = scrW - 12;
-  CS = Math.max(7, Math.floor(
-    Math.min((availW-2*PAD)/(g.n-1), (availH-2*PAD)/(g.n-1))
-  ));
-  // Logical (CSS) size + devicePixelRatio backing store = sharp on retina/phones
-  VW = (g.n-1)*CS+2*PAD;
-  VH = VW;
-  var dpr = Math.min(window.devicePixelRatio||1, 2.5);
-  canvas.width  = Math.round(VW*dpr);
-  canvas.height = Math.round(VH*dpr);
-  canvas.style.width  = VW+'px';
-  canvas.style.height = VH+'px';
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  // Top bar always matches the actual battlefield width, never a fixed cap
-  if(hud){ var hw=Math.max(VW,260)+'px'; hud.style.width=hw; hud.style.maxWidth=hw; }
+  var hud=document.querySelector('.hud');
+  if(hud){ hud.style.width=''; hud.style.maxWidth=''; }
+  var sz=wrapSize();
+  CS_FIT=Math.max(4,Math.floor(Math.min((sz.w-2*PAD)/(g.n-1),(sz.h-2*PAD)/(g.n-1))));
+  var maxCS=Math.max(CS_FIT,CS_MAX);
+  if(!keep){
+    // Start zoomed in just enough for comfortable tapping; the whole board if it already fits
+    var csMin=isCoarsePointer()?22:16;
+    CS=Math.max(CS_FIT,Math.min(csMin,maxCS));
+  }
+  CS=Math.min(Math.max(CS,CS_FIT),maxCS);
+  boardDims();
+  if(!keep){ VW=Math.min(sz.w,BW); VH=Math.min(sz.h,BH); panX=(BW-VW)/2; panY=(BH-VH)/2; }
+  applyCanvasSize();
 }
+// Zoom so that the board point under screen anchor (ax,ay) stays put
+function setZoom(newCS,ax,ay){
+  if(!G||!canvas) return;
+  var maxCS=Math.max(CS_FIT,CS_MAX);
+  newCS=Math.min(Math.max(newCS,CS_FIT),maxCS);
+  if(Math.abs(newCS-CS)<0.01) return;
+  if(ax===undefined){ax=VW/2;ay=VH/2;}
+  var bx=ax+panX, by=ay+panY, k=newCS/CS;
+  CS=newCS; boardDims();
+  panX=PAD+(bx-PAD)*k-ax; panY=PAD+(by-PAD)*k-ay;
+  applyCanvasSize();
+  draw(G);
+}
+function zoomBy(f){ setZoom(CS*f); }
+function panBy(dx,dy){ panX+=dx; panY+=dy; clampPan(); if(G) draw(G); }
 function n2x(r,c){return[PAD+c*CS,PAD+r*CS];}
 function x2n(x,y){return[Math.round((y-PAD)/CS),Math.round((x-PAD)/CS)];}
 
 function draw(g){
   if(!canvas||!ctx) return;
-  var n=g.n,board=g.board,last=g.last,W=VW,H=VH;
-  ctx.clearRect(0,0,W,H);
+  var n=g.n,board=g.board,last=g.last,W=BW,H=BH;
+  ctx.clearRect(0,0,VW,VH);
+  ctx.save();
+  ctx.translate(-panX,-panY);
 
   // ── Paper background ──
   ctx.fillStyle=CC.paper;
@@ -1419,6 +1517,7 @@ function draw(g){
     ctx.strokeStyle=col+'55';ctx.lineWidth=1;
     ctx.setLineDash([2,2]);ctx.stroke();ctx.setLineDash([]);
   }
+  ctx.restore();
   if(loupeShow&&pressActive&&hR>=0&&hC>=0){
     drawLoupe(g);
   }
@@ -1429,7 +1528,7 @@ function drawLoupe(g){
   var lensR=Math.min(VW,VH)*0.22;
   var zoom=2.6;
   var srcR=lensR/zoom;
-  var cx=loupeX, cy=loupeY;
+  var cx=loupeX-panX, cy=loupeY-panY;   // screen (viewport) coords
   var lensCx=Math.min(Math.max(cx,lensR+4),VW-lensR-4);
   var above=(cy-lensR*2-30)>0;
   var lensCy=above ? (cy-lensR-34) : (cy+lensR+34);
@@ -1445,8 +1544,8 @@ function drawLoupe(g){
   ctx.lineWidth=3;ctx.strokeStyle='rgba(255,255,255,.95)';ctx.stroke();
   ctx.lineWidth=1;ctx.strokeStyle='rgba(0,0,0,.35)';ctx.stroke();
   var snapXY=n2x(hR,hC);
-  var lensPtX=lensCx+(snapXY[0]-cx)*zoom;
-  var lensPtY=lensCy+(snapXY[1]-cy)*zoom;
+  var lensPtX=lensCx+(snapXY[0]-panX-cx)*zoom;
+  var lensPtY=lensCy+(snapXY[1]-panY-cy)*zoom;
   if(Math.hypot(lensPtX-lensCx,lensPtY-lensCy)<lensR-4){
     var col=g.cur===1?CC.p1:CC.p2;
     ctx.beginPath();ctx.arc(lensPtX,lensPtY,7,0,Math.PI*2);
@@ -1468,6 +1567,7 @@ function SS(id,fromPop){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
   var prev=curScreen; curScreen=id;
+  document.body.classList.toggle('in-game', id==='screen-game');
   // Browser/phone Back button support: exactly one extra history entry
   // while away from the menu, so Back always returns to the main menu.
   if(!fromPop){
@@ -1676,12 +1776,22 @@ function canLocalMove(){
 }
 function ptrPos(e){
   var rect=canvas.getBoundingClientRect();
+  return {x:(e.clientX-rect.left)*VW/rect.width+panX, y:(e.clientY-rect.top)*VH/rect.height+panY};
+}
+function screenPos(e){
+  var rect=canvas.getBoundingClientRect();
   return {x:(e.clientX-rect.left)*VW/rect.width, y:(e.clientY-rect.top)*VH/rect.height};
 }
+function boardScrollable(){ return BW>VW+0.5||BH>VH+0.5; }
 function setAim(x,y){
   var rc=x2n(x,y); hR=rc[0]; hC=rc[1]; loupeX=x; loupeY=y;
 }
-function pressStart(e){
+var mousePan=null;   // {x,y} last screen pos while dragging the board with the mouse
+function pressStart(e,isMouse){
+  if(isMouse&&boardScrollable()){
+    // On a big board the mouse drags the view; a clean click (no movement) still places
+    var sp=screenPos(e); mousePan={x:sp.x,y:sp.y,moved:false};
+  }
   if(!canLocalMove()) return;
   var p=ptrPos(e);
   pressActive=true; loupeShow=false; pressX=p.x; pressY=p.y;
@@ -1691,6 +1801,15 @@ function pressStart(e){
 }
 function pressMove(e){
   if(!G||G.over) return;
+  if(mousePan){
+    var sp=screenPos(e), dx=sp.x-mousePan.x, dy=sp.y-mousePan.y;
+    if(mousePan.moved||Math.hypot(dx,dy)>PRESS_SLOP){
+      if(!mousePan.moved){ mousePan.moved=true; if(pressActive){ pressActive=false; loupeShow=false; if(pressTimer){clearTimeout(pressTimer);pressTimer=null;} } }
+      mousePan.x=sp.x; mousePan.y=sp.y;
+      panBy(-dx,-dy);
+    }
+    return;
+  }
   var p=ptrPos(e);
   if(!pressActive){
     // plain hover (mouse): ghost preview only
@@ -1706,6 +1825,7 @@ function pressMove(e){
   setAim(p.x,p.y); draw(G);
 }
 function pressEnd(cancel){
+  if(mousePan){ var mp=mousePan; mousePan=null; if(mp.moved){ if(G) draw(G); return; } }
   if(!pressActive) return;
   pressActive=false; loupeShow=false;
   if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
@@ -2037,25 +2157,54 @@ function joinRoom(){
 //  EVENTS
 // ═══════════════════════
 var cv=document.getElementById('gameCanvas');
-cv.addEventListener('mousedown',function(e){ if(e.button===0) pressStart(e); });
+cv.addEventListener('mousedown',function(e){ if(e.button===0) pressStart(e,true); });
+cv.addEventListener('wheel',function(e){
+  if(!G) return;
+  e.preventDefault();
+  var sp=screenPos(e);
+  setZoom(CS*Math.exp(-e.deltaY*0.0015),sp.x,sp.y);
+},{passive:false});
+var pinch=null;   // two-finger gesture state
+function touchPt(t){ var rect=canvas.getBoundingClientRect(); return {x:(t.clientX-rect.left)*VW/rect.width,y:(t.clientY-rect.top)*VH/rect.height}; }
+function pinchStart(touches){
+  var a=touchPt(touches[0]),b=touchPt(touches[1]);
+  pinch={d0:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),mx:(a.x+b.x)/2,my:(a.y+b.y)/2,cs0:CS,
+         bx:(a.x+b.x)/2+panX,by:(a.y+b.y)/2+panY};
+}
+function pinchMove(touches){
+  if(!pinch) return;
+  var a=touchPt(touches[0]),b=touchPt(touches[1]);
+  var d=Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)), mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+  var maxCS=Math.max(CS_FIT,CS_MAX);
+  var newCS=Math.min(Math.max(pinch.cs0*d/pinch.d0,CS_FIT),maxCS);
+  var k=newCS/pinch.cs0;
+  CS=newCS; boardDims();
+  // keep the board point that was under the fingers' midpoint under the (moving) midpoint
+  panX=PAD+(pinch.bx-PAD)*k-mx; panY=PAD+(pinch.by-PAD)*k-my;
+  applyCanvasSize();
+  if(G) draw(G);
+}
 cv.addEventListener('mousemove',function(e){ pressMove(e); });
 cv.addEventListener('mouseup',function(e){ if(e.button===0) pressEnd(false); });
 cv.addEventListener('mouseleave',function(){ if(pressActive) pressEnd(true); clearAim(); });
 cv.addEventListener('touchstart',function(e){
   e.preventDefault();
-  if(e.touches.length>1){ pressEnd(true); return; }   // second finger = cancel
+  if(e.touches.length>1){ pressEnd(true); if(e.touches.length===2&&G) pinchStart(e.touches); else pinch=null; return; }
+  pinch=null;
   var t=e.touches[0]; pressStart({clientX:t.clientX,clientY:t.clientY});
 },{passive:false});
 cv.addEventListener('touchmove',function(e){
   e.preventDefault();
+  if(e.touches.length>=2){ if(!pinch&&G) pinchStart(e.touches); else pinchMove(e.touches); return; }
   if(!pressActive) return;
   var t=e.touches[0]; pressMove({clientX:t.clientX,clientY:t.clientY});
 },{passive:false});
 cv.addEventListener('touchend',function(e){
   e.preventDefault();
+  if(e.touches.length<2) pinch=null;
   if(e.touches.length===0) pressEnd(false);
 },{passive:false});
-cv.addEventListener('touchcancel',function(e){ pressEnd(true); },{passive:false});
+cv.addEventListener('touchcancel',function(e){ pinch=null; pressEnd(true); },{passive:false});
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape') closeAllModals();
   if(e.key==='r'&&gameMode!=='online'&&document.getElementById('screen-game').classList.contains('active')&&!document.querySelector('.overlay.open')) askRestart();
@@ -2063,7 +2212,7 @@ document.addEventListener('keydown',function(e){
 });
 function relayout(){
   if(G&&document.getElementById('screen-game').classList.contains('active')){
-    requestAnimationFrame(function(){requestAnimationFrame(function(){initCanvas(G);draw(G);});});
+    requestAnimationFrame(function(){requestAnimationFrame(function(){initCanvas(G,true);draw(G);});});
   }
 }
 window.addEventListener('resize',relayout);
@@ -2088,6 +2237,10 @@ window.addEventListener('orientationchange',function(){setTimeout(relayout,250);
 
 // ── INIT ──
 applyLang();
+// PWA: offline cache + "Add to Home Screen" (needs sw.js/manifest.json next to this file; silently skipped otherwise)
+if('serviceWorker' in navigator && /^https?:/.test(location.protocol)){
+  window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
 
 
 </script>
