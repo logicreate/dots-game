@@ -1,7 +1,7 @@
 {
   "name": "DOTS WAR",
   "short_name": "DOTS WAR",
-  "description": "Захватывай территорию точками: кампания против ИИ и битвы онлайн",
+  "description": "Окружай и захватывай точки соперника: кампания, задания дня, онлайн",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
