@@ -2,7 +2,7 @@
    Strategy: network-first for the game page (so new versions arrive as soon
    as you are online), cache fallback when offline. Firebase/Google requests
    are never intercepted. */
-var CACHE = 'dotswar-v4';
+var CACHE = 'dotswar-v5';
 var ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './favicon.png', './preview.png'];
 
 self.addEventListener('install', function (e) {
