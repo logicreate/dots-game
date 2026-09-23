@@ -6,8 +6,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#2b2416",
-  "theme_color": "#2b2416",
+  "background_color": "#1b3027",
+  "theme_color": "#1b3027",
   "lang": "ru",
   "categories": ["games", "board"],
   "icons": [
