@@ -2552,7 +2552,9 @@ function renderExp(){
     g.appendChild(b); try{ drawMapPreview(cv,id,EXP.n,EXPSEED[id],EXP.land); }catch(e){}
   });
   var LE=document.getElementById('expLands');
-  if(LE){ LE.style.display=EXP.map==='island'?'':'none';
+  EXP.land='rand';   // the land is random every time; its name is shown on the card (tap it again for another)
+  if(LE){ LE.style.display='none'; LE.innerHTML=''; }
+  if(false){
     LE.innerHTML=['rand','blob'].concat(LAND_IDS).map(function(l){ var lab=l==='rand'?'🎲 '+T('ldRand'):l==='blob'?'🏝 '+T('mp_island'):LANDS[l].ico+' '+landName(l);
       return '<button class="'+(EXP.land===l?'on':'')+'" onclick="EXP.land=\''+l+'\';EXPSEED.island=newMapSeed();saveExp();renderExp()">'+lab+'</button>'; }).join(''); }
   document.getElementById('expFogL').textContent=T('expFog');
