@@ -2,7 +2,18 @@
    Strategy: network-first for the game page (so new versions arrive as soon
    as you are online), cache fallback when offline. Firebase/Google requests
    are never intercepted. */
-var CACHE = 'dotswar-v13';
+var CACHE = 'dotswar-v14';
+// Push notifications (friend invites): Firebase Cloud Messaging shows them while the game is closed.
+// Wrapped in try: when offline the scripts cannot load, and the game must still work.
+try {
+  importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js',
+                'https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
+  firebase.initializeApp({ apiKey: 'AIzaSyCxGB68ogFcdRk5Aeav_6rZmCNmIHY8_K0', authDomain: 'dots-2d4e4.firebaseapp.com',
+    projectId: 'dots-2d4e4', storageBucket: 'dots-2d4e4.firebasestorage.app', messagingSenderId: '911143426593',
+    appId: '1:911143426593:web:a89862c9acb24aff8f6160' });
+  firebase.messaging();
+} catch (e) {}
+
 var ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './favicon.png', './preview.png'];
 
 self.addEventListener('install', function (e) {
