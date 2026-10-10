@@ -2,7 +2,7 @@
    Strategy: network-first for the game page (so new versions arrive as soon
    as you are online), cache fallback when offline. Firebase/Google requests
    are never intercepted. */
-var CACHE = 'dotswar-v14';
+var CACHE = 'dotswar-v16';
 // Push notifications (friend invites): Firebase Cloud Messaging shows them while the game is closed.
 // Wrapped in try: when offline the scripts cannot load, and the game must still work.
 try {
